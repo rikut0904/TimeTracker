@@ -87,9 +87,10 @@ export default function Sessions() {
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
 
     const deleteSession = async (sessionId: string) => {
+        if (!user) return
         if (confirm("このセッションを削除しますか？")) {
             try {
-                await deleteSessionFromDB(sessionId)
+                await deleteSessionFromDB(user.uid, sessionId)
             } catch (error) {
                 console.error("セッションの削除に失敗しました:", error)
                 alert("セッションの削除に失敗しました。")
@@ -98,8 +99,9 @@ export default function Sessions() {
     }
 
     const markAsCompleted = async (sessionId: string) => {
+        if (!user) return
         try {
-            await updateSession(sessionId, { status: "completed", date: new Date() })
+            await updateSession(user.uid, sessionId, { status: "completed", date: new Date() })
             alert("セッションを完了にしました！")
         } catch (error) {
             console.error("セッションの完了に失敗しました:", error)
@@ -125,8 +127,8 @@ export default function Sessions() {
             alert("クライアントと時間を選択してください")
             return
         }
-
-        if (!editingSession) return
+      
+        if (!editingSession || !user) return
 
         const finalDuration = editSession.duration || Number.parseInt(editSession.customDuration)
         if (!finalDuration || finalDuration <= 0) {
@@ -153,7 +155,7 @@ export default function Sessions() {
         }
 
         try {
-            await updateSession(editingSession.id!, {
+            await updateSession(user.uid, editingSession.id!, {
                 type: editSession.type,
                 clientId: editSession.clientId,
                 clientName: client.name,

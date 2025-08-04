@@ -45,7 +45,7 @@ export default function LogSession() {
 
         return () => {
             if (unsubscribe) {
-                unsubscribe.then(u => u()).catch(err => console.error(err))
+                unsubscribe()
             }
         }
     }, [user])

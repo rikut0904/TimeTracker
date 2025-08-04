@@ -36,6 +36,7 @@ import {
     updateSession,
     getUserSessions,
     deleteSession,
+    deleteField,
 } from "@/lib/firestore"
 import type { Client } from "@/lib/firestore"
 
@@ -83,7 +84,7 @@ export default function SettingsPage() {
         if (user) {
             const unsubscribe = subscribeToUserClients(user.uid, setClients)
             return () => {
-                unsubscribe.then(u => u()).catch(err => console.error(err))
+                unsubscribe()
             }
         }
     }, [user])
@@ -126,7 +127,7 @@ export default function SettingsPage() {
             return
         }
 
-        const clientData: Omit<Client, "id" | "userId"> = {
+        const clientData: Omit<Client, "id"> = {
             name: newClient.name.trim(),
             status: "active",
         }
@@ -172,13 +173,13 @@ export default function SettingsPage() {
         }
 
         try {
-            await updateClient(editingClient.id!, updates)
+            await updateClient(user.uid, editingClient.id!, updates)
 
             // 関連セッションのクライアント名も更新
             const sessions = await getUserSessions(user.uid)
             const relatedSessions = sessions.filter((session) => session.clientId === editingClient.id)
             for (const session of relatedSessions) {
-                await updateSession(session.id!, { clientName: editClient.name.trim() })
+                await updateSession(user.uid, session.id!, { clientName: editClient.name.trim() })
             }
 
             setEditingClient(null)
@@ -202,8 +203,9 @@ export default function SettingsPage() {
     }
 
     const toggleClientStatus = async (clientId: string, currentStatus: "active" | "inactive") => {
+        if (!user) return
         try {
-            await updateClient(clientId, { status: currentStatus === "active" ? "inactive" : "active" })
+            await updateClient(user.uid, clientId, { status: currentStatus === "active" ? "inactive" : "active" })
         } catch (error) {
             console.error("クライアントステータスの更新に失敗しました:", error)
             alert("クライアントステータスの更新に失敗しました。")
@@ -227,10 +229,10 @@ export default function SettingsPage() {
             try {
                 // 関連セッションを削除
                 for (const session of relatedSessions) {
-                    await deleteSession(session.id!)
+                    await deleteSession(user.uid, session.id!)
                 }
                 // クライアントを削除
-                await deleteClientFromDB(clientId)
+                await deleteClientFromDB(user.uid, clientId)
                 alert(`「${clientToDelete.name}」とその関連セッションを削除しました。`)
             } catch (error) {
                 console.error("クライアントまたはセッションの削除に失敗しました:", error)
@@ -462,7 +464,9 @@ export default function SettingsPage() {
                                                     <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
                                                         キャンセル
                                                     </Button>
-                                                    <Button onClick={handleAddClient}>追加</Button>
+                                                    <Button onClick={handleAddClient}>
+                                                        追加
+                                                    </Button>
                                                 </DialogFooter>
                                             </DialogContent>
                                         </Dialog>
@@ -591,7 +595,9 @@ export default function SettingsPage() {
                             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
                                 キャンセル
                             </Button>
-                            <Button onClick={handleEditClient}>更新</Button>
+                            <Button onClick={handleEditClient}>
+                                更新
+                            </Button>
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
