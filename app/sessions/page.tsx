@@ -145,11 +145,7 @@ export default function Sessions() {
         if (editSession.status === "planned") {
             sessionDate = new Date(editSession.date)
         } else {
-            // 完了の場合、時間部分を保持するか現在時刻を使用
-            const originalDate = new Date(editingSession.date)
-            const newDate = new Date(editSession.date)
-            newDate.setHours(originalDate.getHours(), originalDate.getMinutes(), originalDate.getSeconds())
-            sessionDate = newDate
+            sessionDate = new Date(editSession.date)
         }
 
         try {
@@ -328,8 +324,6 @@ export default function Sessions() {
                                                                 year: "numeric",
                                                                 month: "short",
                                                                 day: "numeric",
-                                                                hour: session.status === "completed" ? "2-digit" : undefined,
-                                                                minute: session.status === "completed" ? "2-digit" : undefined,
                                                             })}
                                                         </span>
                                                     </div>
