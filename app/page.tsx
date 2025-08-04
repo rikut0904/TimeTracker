@@ -170,38 +170,24 @@ export default function Dashboard() {
 
                     {/* Quick Actions */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                        <Card>
+                        <Card className="flex flex-col">
                             <CardHeader>
                                 <CardTitle>クイックアクション</CardTitle>
                                 <CardDescription>よく使う操作をすぐに実行できます</CardDescription>
                             </CardHeader>
-                            <CardContent className="space-y-4">
-                                <Link href="/log-session" className="w-full">
-                                    <Button className="w-full" size="lg">
-                                        <Plus className="mr-2 h-4 w-4" />
+                            <CardContent className="flex flex-col flex-grow gap-4">
+                                <Link href="/log-session" className="flex-grow">
+                                    <Button className="w-full h-full md:text-lg" size="lg">
+                                        <Plus className="mr-2 h-5 w-5" />
                                         新しいセッションを記録
                                     </Button>
                                 </Link>
-                                <Link href="/log-session?mode=planned" className="w-full">
-                                    <Button variant="outline" className="w-full bg-transparent" size="lg">
-                                        <Plus className="mr-2 h-4 w-4" />
+                                <Link href="/log-session?mode=planned" className="flex-grow">
+                                    <Button variant="outline" className="w-full h-full md:text-lg" size="lg">
+                                        <Plus className="mr-2 h-5 w-5" />
                                         予定セッションを登録
                                     </Button>
                                 </Link>
-                                <div className="grid grid-cols-2 gap-2">
-                                    <Link href="/log-session?type=individual" className="w-full">
-                                        <Button variant="outline" className="w-full bg-transparent">
-                                            <User className="mr-2 h-4 w-4" />
-                                            個人セッション
-                                        </Button>
-                                    </Link>
-                                    <Link href="/log-session?type=group" className="w-full">
-                                        <Button variant="outline" className="w-full bg-transparent">
-                                            <Users className="mr-2 h-4 w-4" />
-                                            グループセッション
-                                        </Button>
-                                    </Link>
-                                </div>
                             </CardContent>
                         </Card>
 
@@ -225,7 +211,7 @@ export default function Dashboard() {
                                                     )}
                                                     <span className="text-sm font-medium">{session.clientName}</span>
                                                     {session.status === "planned" && (
-                                                        <Badge variant="outline" className="text-xs">
+                                                        <Badge className="text-xs bg-blue-500 text-white">
                                                             予定
                                                         </Badge>
                                                     )}
