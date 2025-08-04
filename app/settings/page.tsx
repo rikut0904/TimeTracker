@@ -35,8 +35,9 @@ import {
     subscribeToUserClients,
     updateSession,
     getUserSessions,
+    deleteSession,
 } from "@/lib/firestore"
-import { deleteField } from "firebase/firestore"
+import type { Client } from "@/lib/firestore"
 
 interface UserProfile {
     name: string
@@ -226,7 +227,7 @@ export default function SettingsPage() {
             try {
                 // 関連セッションを削除
                 for (const session of relatedSessions) {
-                    await deleteClientFromDB(session.id!)
+                    await deleteSession(session.id!)
                 }
                 // クライアントを削除
                 await deleteClientFromDB(clientId)
