@@ -35,12 +35,10 @@ import {
   
   // セッション関連の操作
   export const addSession = async (userId: string, sessionData: Omit<Session, "id" | "userId">) => {
-    const newDate = new Date(sessionData.date);
-    newDate.setHours(0, 0, 0, 0);
     const docRef = await addDoc(collection(db, "sessions"), {
       ...sessionData,
       userId,
-      date: Timestamp.fromDate(newDate),
+      date: Timestamp.fromDate(sessionData.date),
     })
     return docRef.id
   }
@@ -49,9 +47,7 @@ import {
     const sessionRef = doc(db, "sessions", sessionId)
     const updateData = { ...updates }
     if (updates.date) {
-      const newDate = new Date(updates.date);
-      newDate.setHours(0, 0, 0, 0);
-      updateData.date = Timestamp.fromDate(newDate) as any
+      updateData.date = Timestamp.fromDate(updates.date) as any
     }
     await updateDoc(sessionRef, updateData)
   }
@@ -129,4 +125,3 @@ import {
   
     return setupSubscription()
   }
-  

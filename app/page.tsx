@@ -178,13 +178,13 @@ export default function Dashboard() {
                             <CardContent className="flex flex-col flex-grow gap-4">
                                 <Link href="/log-session" className="flex-grow">
                                     <Button className="w-full h-full md:text-lg" size="lg">
-                                        <Plus className="mr-2 h-10 w-5" />
+                                        <Plus className="mr-2 h-5 w-5" />
                                         新しいセッションを記録
                                     </Button>
                                 </Link>
                                 <Link href="/log-session?mode=planned" className="flex-grow">
                                     <Button variant="outline" className="w-full h-full md:text-lg" size="lg">
-                                        <Plus className="mr-2 h-10 w-5" />
+                                        <Plus className="mr-2 h-5 w-5" />
                                         予定セッションを登録
                                     </Button>
                                 </Link>
@@ -226,9 +226,6 @@ export default function Dashboard() {
                                         ))}
                                     </div>
                                 )}
-                                <Link href="/sessions" className="text-sm text-blue-600">
-                                    セッション一覧を見る
-                                </Link>
                             </CardContent>
                         </Card>
                     </div>
