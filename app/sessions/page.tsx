@@ -72,8 +72,8 @@ export default function Sessions() {
         })
 
         return () => {
-            unsubscribeSessions()
-            unsubscribeClients()
+            unsubscribeSessions.then(u => u()).catch(err => console.error(err))
+            unsubscribeClients.then(u => u()).catch(err => console.error(err))
         }
     }, [user])
 
@@ -127,7 +127,7 @@ export default function Sessions() {
             alert("クライアントと時間を選択してください")
             return
         }
-
+      
         if (!editingSession || !user) return
 
         const finalDuration = editSession.duration || Number.parseInt(editSession.customDuration)

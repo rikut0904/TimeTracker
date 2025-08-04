@@ -71,6 +71,7 @@ export const subscribeToUserSessions = (userId: string, callback: (sessions: Ses
 
   const unsubscribe = onSnapshot(q, (querySnapshot) => {
     const sessions = querySnapshot.docs.map((doc) => ({
+
       id: doc.id,
       ...doc.data(),
       date: doc.data().date.toDate(),
