@@ -10,6 +10,7 @@ import {
     orderBy,
     onSnapshot,
     Timestamp,
+    deleteField,
   } from "firebase/firestore"
   import { db } from "./firebase"
   
@@ -65,22 +66,20 @@ import {
       date: doc.data().date.toDate(),
     })) as Session[]
   }
-  
+
   export const subscribeToUserSessions = (userId: string, callback: (sessions: Session[]) => void) => {
-    const setupSubscription = async () => {
-      const q = query(collection(db, "sessions"), where("userId", "==", userId), orderBy("date", "desc"))
-  
-      return onSnapshot(q, (querySnapshot) => {
-        const sessions = querySnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-          date: doc.data().date.toDate(),
-        })) as Session[]
-        callback(sessions)
-      })
-    }
-  
-    return setupSubscription()
+    const q = query(collection(db, "sessions"), where("userId", "==", userId), orderBy("date", "desc"))
+    
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const sessions = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+        date: doc.data().date.toDate(),
+      })) as Session[]
+      callback(sessions)
+    })
+    
+    return unsubscribe
   }
   
   // クライアント関連の操作
@@ -111,18 +110,16 @@ import {
   }
   
   export const subscribeToUserClients = (userId: string, callback: (clients: Client[]) => void) => {
-    const setupSubscription = async () => {
-      const q = query(collection(db, "clients"), where("userId", "==", userId))
-  
-      return onSnapshot(q, (querySnapshot) => {
-        const clients = querySnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        })) as Client[]
-        callback(clients)
-      })
-    }
-  
-    return setupSubscription()
+    const q = query(collection(db, "clients"), where("userId", "==", userId))
+    
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const clients = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as Client[]
+      callback(clients)
+    })
+    
+    return unsubscribe
   }
   

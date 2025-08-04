@@ -72,8 +72,8 @@ export default function Sessions() {
         })
 
         return () => {
-            unsubscribeSessions.then(u => u()).catch(err => console.error(err))
-            unsubscribeClients.then(u => u()).catch(err => console.error(err))
+            unsubscribeSessions()
+            unsubscribeClients()
         }
     }, [user])
 

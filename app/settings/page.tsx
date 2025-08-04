@@ -36,6 +36,7 @@ import {
     updateSession,
     getUserSessions,
     deleteSession,
+    deleteField,
 } from "@/lib/firestore"
 import type { Client } from "@/lib/firestore"
 
@@ -83,7 +84,7 @@ export default function SettingsPage() {
         if (user) {
             const unsubscribe = subscribeToUserClients(user.uid, setClients)
             return () => {
-                unsubscribe.then(u => u()).catch(err => console.error(err))
+                unsubscribe()
             }
         }
     }, [user])
