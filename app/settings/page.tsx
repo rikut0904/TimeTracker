@@ -28,14 +28,15 @@ import { Clock, Plus, Search, Trash2, Edit, MoreVertical, User, Settings, Users,
 import Link from "next/link"
 import { useAuth } from "@/contexts/AuthContext"
 import ProtectedRoute from "@/components/ProtectedRoute"
-
-interface Client {
-    id: string
-    name: string
-    email?: string
-    phone?: string
-    status: "active" | "inactive"
-}
+import {
+    addClient,
+    updateClient,
+    deleteClient as deleteClientFromDB,
+    subscribeToUserClients,
+    updateSession,
+    getUserSessions,
+} from "@/lib/firestore"
+import { deleteField } from "firebase/firestore"
 
 interface UserProfile {
     name: string
@@ -78,12 +79,15 @@ export default function SettingsPage() {
     })
 
     useEffect(() => {
-        // クライアントデータの読み込み
-        const savedClients = localStorage.getItem("clients")
-        if (savedClients) {
-            setClients(JSON.parse(savedClients))
+        if (user) {
+            const unsubscribe = subscribeToUserClients(user.uid, setClients)
+            return () => {
+                unsubscribe.then(u => u()).catch(err => console.error(err))
+            }
         }
+    }, [user])
 
+    useEffect(() => {
         if (userProfile) {
             setProfile(userProfile)
         }
@@ -108,70 +112,82 @@ export default function SettingsPage() {
         }
     }
 
-    // クライアント管理機能（既存のコードを移植）
+    // クライアント管理機能
     const filteredClients = clients.filter(
         (client) =>
             client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             (client.email && client.email.toLowerCase().includes(searchTerm.toLowerCase())),
     )
 
-    const handleAddClient = () => {
-        if (!newClient.name.trim()) {
+    const handleAddClient = async () => {
+        if (!newClient.name.trim() || !user) {
             alert("クライアント名を入力してください")
             return
         }
 
-        const client: Client = {
-            id: Date.now().toString(),
+        const clientData: Omit<Client, "id" | "userId"> = {
             name: newClient.name.trim(),
-            email: newClient.email.trim() || undefined,
-            phone: newClient.phone.trim() || undefined,
             status: "active",
         }
 
-        const updatedClients = [...clients, client]
-        setClients(updatedClients)
-        localStorage.setItem("clients", JSON.stringify(updatedClients))
+        if (newClient.email.trim()) {
+            clientData.email = newClient.email.trim()
+        }
+        if (newClient.phone.trim()) {
+            clientData.phone = newClient.phone.trim()
+        }
 
-        setNewClient({ name: "", email: "", phone: "" })
-        setIsAddDialogOpen(false)
+        try {
+            await addClient(user.uid, clientData)
+            setNewClient({ name: "", email: "", phone: "" })
+            setIsAddDialogOpen(false)
+            alert("クライアントを追加しました")
+        } catch (error) {
+            console.error("クライアントの追加に失敗しました:", error)
+            alert("クライアントの追加に失敗しました。")
+        }
     }
 
-    const handleEditClient = () => {
-        if (!editClient.name.trim()) {
+    const handleEditClient = async () => {
+        if (!editClient.name.trim() || !editingClient || !user) {
             alert("クライアント名を入力してください")
             return
         }
 
-        if (!editingClient) return
-
-        const updatedClients = clients.map((client) =>
-            client.id === editingClient.id
-                ? {
-                    ...client,
-                    name: editClient.name.trim(),
-                    email: editClient.email.trim() || undefined,
-                    phone: editClient.phone.trim() || undefined,
-                }
-                : client,
-        )
-        setClients(updatedClients)
-        localStorage.setItem("clients", JSON.stringify(updatedClients))
-
-        // 関連するセッションのクライアント名も更新
-        const savedSessions = localStorage.getItem("sessions")
-        if (savedSessions) {
-            const sessions = JSON.parse(savedSessions)
-            const updatedSessions = sessions.map((session: any) =>
-                session.clientId === editingClient.id ? { ...session, clientName: editClient.name.trim() } : session,
-            )
-            localStorage.setItem("sessions", JSON.stringify(updatedSessions))
+        const updates: { [key: string]: any } = {
+            name: editClient.name.trim(),
         }
 
-        setEditingClient(null)
-        setEditClient({ name: "", email: "", phone: "" })
-        setIsEditDialogOpen(false)
-        alert("クライアント情報を更新しました")
+        if (editClient.email.trim()) {
+            updates.email = editClient.email.trim()
+        } else {
+            updates.email = deleteField()
+        }
+
+        if (editClient.phone.trim()) {
+            updates.phone = editClient.phone.trim()
+        } else {
+            updates.phone = deleteField()
+        }
+
+        try {
+            await updateClient(editingClient.id!, updates)
+
+            // 関連セッションのクライアント名も更新
+            const sessions = await getUserSessions(user.uid)
+            const relatedSessions = sessions.filter((session) => session.clientId === editingClient.id)
+            for (const session of relatedSessions) {
+                await updateSession(session.id!, { clientName: editClient.name.trim() })
+            }
+
+            setEditingClient(null)
+            setEditClient({ name: "", email: "", phone: "" })
+            setIsEditDialogOpen(false)
+            alert("クライアント情報を更新しました")
+        } catch (error) {
+            console.error("クライアント情報の更新に失敗しました:", error)
+            alert("クライアント情報の更新に失敗しました。")
+        }
     }
 
     const openEditDialog = (client: Client) => {
@@ -184,43 +200,41 @@ export default function SettingsPage() {
         setIsEditDialogOpen(true)
     }
 
-    const toggleClientStatus = (clientId: string) => {
-        const updatedClients = clients.map((client) =>
-            client.id === clientId
-                ? { ...client, status: client.status === "active" ? ("inactive" as const) : ("active" as const) }
-                : client,
-        )
-        setClients(updatedClients)
-        localStorage.setItem("clients", JSON.stringify(updatedClients))
+    const toggleClientStatus = async (clientId: string, currentStatus: "active" | "inactive") => {
+        try {
+            await updateClient(clientId, { status: currentStatus === "active" ? "inactive" : "active" })
+        } catch (error) {
+            console.error("クライアントステータスの更新に失敗しました:", error)
+            alert("クライアントステータスの更新に失敗しました。")
+        }
     }
 
-    const deleteClient = (clientId: string) => {
+    const deleteClient = async (clientId: string) => {
+        if (!user) return
         const clientToDelete = clients.find((c) => c.id === clientId)
         if (!clientToDelete) return
 
-        // そのクライアントに関連するセッションがあるかチェック
-        const savedSessions = localStorage.getItem("sessions")
-        const sessions = savedSessions ? JSON.parse(savedSessions) : []
-        const relatedSessions = sessions.filter((session: any) => session.clientId === clientId)
+        const sessions = await getUserSessions(user.uid)
+        const relatedSessions = sessions.filter((session) => session.clientId === clientId)
 
         let confirmMessage = `「${clientToDelete.name}」を削除しますか？`
         if (relatedSessions.length > 0) {
-            confirmMessage += `\n\n注意: このクライアントには${relatedSessions.length}件のセッション記録があります。削除すると関連するセッション記録も削除されます。`
+            confirmMessage += `\n\n注意: このクライアントには${relatedSessions.length}件のセッション記録があります。クライアントを削除すると、これらのセッション記録もすべて削除されます。`
         }
 
         if (confirm(confirmMessage)) {
-            // クライアントを削除
-            const updatedClients = clients.filter((client) => client.id !== clientId)
-            setClients(updatedClients)
-            localStorage.setItem("clients", JSON.stringify(updatedClients))
-
-            // 関連するセッションも削除
-            if (relatedSessions.length > 0) {
-                const updatedSessions = sessions.filter((session: any) => session.clientId !== clientId)
-                localStorage.setItem("sessions", JSON.stringify(updatedSessions))
+            try {
+                // 関連セッションを削除
+                for (const session of relatedSessions) {
+                    await deleteClientFromDB(session.id!)
+                }
+                // クライアントを削除
+                await deleteClientFromDB(clientId)
+                alert(`「${clientToDelete.name}」とその関連セッションを削除しました。`)
+            } catch (error) {
+                console.error("クライアントまたはセッションの削除に失敗しました:", error)
+                alert("削除に失敗しました。")
             }
-
-            alert(`「${clientToDelete.name}」を削除しました。`)
         }
     }
 
@@ -489,7 +503,11 @@ export default function SettingsPage() {
                                                     </TableCell>
                                                     <TableCell>
                                                         <div className="flex items-center space-x-2">
-                                                            <Button variant="outline" size="sm" onClick={() => toggleClientStatus(client.id)}>
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                onClick={() => toggleClientStatus(client.id!, client.status)}
+                                                            >
                                                                 {client.status === "active" ? "非アクティブ化" : "アクティブ化"}
                                                             </Button>
                                                             <DropdownMenu>
@@ -505,7 +523,7 @@ export default function SettingsPage() {
                                                                     </DropdownMenuItem>
                                                                     <DropdownMenuSeparator />
                                                                     <DropdownMenuItem
-                                                                        onClick={() => deleteClient(client.id)}
+                                                                        onClick={() => deleteClient(client.id!)}
                                                                         className="text-red-600 focus:text-red-600"
                                                                     >
                                                                         <Trash2 className="mr-2 h-4 w-4" />

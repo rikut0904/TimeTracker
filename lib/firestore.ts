@@ -92,7 +92,7 @@ import {
     return docRef.id
   }
   
-  export const updateClient = async (clientId: string, updates: Partial<Client>) => {
+  export const updateClient = async (clientId: string, updates: { [key: string]: any }) => {
     const clientRef = doc(db, "clients", clientId)
     await updateDoc(clientRef, updates)
   }

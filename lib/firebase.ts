@@ -14,14 +14,8 @@ const firebaseConfig = {
 // Firebase アプリの初期化（重複初期化を防ぐ）
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp()
 
-// クライアントサイドでのみ初期化
-let auth: any = null
-let db: any = null
-
-if (typeof window !== "undefined") {
-  auth = getAuth(app)
-  db = getFirestore(app)
-}
+const auth = getAuth(app)
+const db = getFirestore(app)
 
 export { auth, db }
 export default app
