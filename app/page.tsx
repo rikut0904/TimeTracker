@@ -22,9 +22,10 @@ export default function Dashboard() {
         const setupSubscription = async () => {
             try {
                 const { subscribeToUserSessions } = await import("@/lib/firestore")
-                unsubscribe = await subscribeToUserSessions(user.uid, (sessions) => {
+                const unsub = await subscribeToUserSessions(user.uid, (sessions) => {
                     setSessions(sessions)
                 })
+                unsubscribe = unsub
             } catch (error) {
                 console.error("Error setting up sessions subscription:", error)
             }

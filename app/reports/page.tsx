@@ -31,7 +31,7 @@ export default function Reports() {
     const setupSubscription = async () => {
         try {
             const { subscribeToUserSessions } = await import("@/lib/firestore")
-            unsubscribe = await subscribeToUserSessions(user.uid, (sessions) => {
+            unsubscribe = subscribeToUserSessions(user.uid, (sessions) => {
                 setSessions(sessions)
             })
         } catch (error) {
