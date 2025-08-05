@@ -115,7 +115,7 @@ export default function Dashboard() {
                                 <Link href="/log-session" className="flex-grow">
                                     <Button className="w-full h-full md:text-lg" size="lg">
                                         <Plus className="mr-2 h-5 w-5" />
-                                        新しいセッションを記録
+                                        セッションを記録
                                     </Button>
                                 </Link>
                                 <Link href="/log-session?mode=planned" className="flex-grow">
