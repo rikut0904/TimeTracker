@@ -22,7 +22,8 @@ import {
     DropdownMenuTrigger,
     DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
-import { User, Users, Search, Plus, Trash2, CheckCircle, Edit, MoreVertical, Link } from "lucide-react"
+import { User, Users, Search, Plus, Trash2, CheckCircle, Edit, MoreVertical } from "lucide-react"
+import Link from "next/link"
 import ProtectedRoute from "@/components/ProtectedRoute"
 import { updateSession, deleteSession as deleteSessionFromDB } from "@/lib/firestore"
 import type { Session, Client } from "@/lib/firestore"
@@ -101,7 +102,7 @@ export default function Sessions() {
             alert("クライアントと時間を選択してください")
             return
         }
-      
+
         if (!editingSession || !user) return
 
         const finalDuration = editSession.duration || Number.parseInt(editSession.customDuration)
@@ -172,14 +173,14 @@ export default function Sessions() {
                                 </div>
                                 <div className="flex space-x-2">
                                     <Link href="/log-session?mode=planned">
-                                        <Button variant="outline">
-                                            <Plus className="mr-2 h-4 w-4" />
+                                        <Button variant="outline" className="w-full h-full md:text-lg" size="lg">
+                                            <Plus className="mr-2 h-5 w-5" />
                                             予定登録
                                         </Button>
                                     </Link>
                                     <Link href="/log-session">
-                                        <Button>
-                                            <Plus className="mr-2 h-4 w-4" />
+                                        <Button className="w-full h-full md:text-lg" size="lg">
+                                            <Plus className="mr-2 h-5 w-5" />
                                             セッション記録
                                         </Button>
                                     </Link>
