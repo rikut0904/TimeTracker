@@ -166,12 +166,12 @@ export default function Sessions() {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                     <Card>
                         <CardHeader>
-                            <div className="flex justify-between items-center">
-                                <div>
+                            <div className="flex md:flex-row flex-col justify-between items-center gap-3">
+                                <div className="flex flex-col gap-2 w-full">
                                     <CardTitle>セッション履歴</CardTitle>
-                                    <CardDescription>記録されたセッションと予定の一覧です</CardDescription>
+                                    <CardDescription className="text-xs">記録されたセッションと予定の一覧です</CardDescription>
                                 </div>
-                                <div className="flex space-x-2">
+                                <div className="flex w-full sm:space-x-2 sm:flex-row flex-col sm:justify-end justify-center">
                                     <Link href="/log-session?mode=planned">
                                         <Button variant="outline" className="w-full h-full md:text-lg" size="lg">
                                             <Plus className="mr-2 h-5 w-5" />

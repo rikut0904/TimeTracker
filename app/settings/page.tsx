@@ -63,6 +63,18 @@ export default function SettingsPage() {
         groupGoal: 45,
     })
 
+    const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+        const handleResize = () => {
+            setIsMobile(window.innerWidth < 768); // Tailwind's 'md' breakpoint is 768px
+        };
+
+        handleResize(); // Set initial value
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
     // クライアント管理用の状態
     const [searchTerm, setSearchTerm] = useState("")
     const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
@@ -235,19 +247,19 @@ export default function SettingsPage() {
                         <p className="text-gray-600">アカウント情報とアプリケーションの設定を管理します</p>
                     </div>
 
-                    <Tabs defaultValue="profile" className="space-y-6">
-                        <TabsList className="grid w-full grid-cols-3">
-                            <TabsTrigger value="profile" className="flex items-center space-x-2">
-                                <User className="h-4 w-4" />
-                                <span>個人情報</span>
+                    <Tabs defaultValue="profile">
+                        <TabsList className="grid w-full md:grid-cols-3 grid-cols-[1fr_1fr_1.4fr]">
+                            <TabsTrigger value="profile" className="flex items-center justify-center text-center">
+                                <User className="h-4 w-4 md:size-5 hidden md:block" />
+                                <span className="md:text-sm text-xs">個人情報</span>
                             </TabsTrigger>
-                            <TabsTrigger value="goals" className="flex items-center space-x-2">
-                                <Settings className="h-4 w-4" />
-                                <span>目標設定</span>
+                            <TabsTrigger value="goals" className="flex items-center justify-center text-center">
+                                <Settings className="h-4 w-4 md:size-5 hidden md:block" />
+                                <span className="md:text-sm text-xs">目標設定</span>
                             </TabsTrigger>
-                            <TabsTrigger value="clients" className="flex items-center space-x-2">
-                                <Users className="h-4 w-4" />
-                                <span>クライアント管理</span>
+                            <TabsTrigger value="clients" className="flex items-center justify-center text-center">
+                                <Users className="h-4 w-4 md:size-5 hidden md:block" />
+                                <span className="md:text-sm text-xs">クライアント管理</span>
                             </TabsTrigger>
                         </TabsList>
 
@@ -364,8 +376,8 @@ export default function SettingsPage() {
                         <TabsContent value="clients">
                             <Card>
                                 <CardHeader>
-                                    <div className="flex justify-between items-center">
-                                        <div>
+                                    <div className="flex md:flex-row flex-col justify-between items-center gap-3">
+                                        <div className="flex flex-col gap-2">
                                             <CardTitle>クライアント管理</CardTitle>
                                             <CardDescription>セッションを行うクライアントを管理します</CardDescription>
                                         </div>
@@ -440,32 +452,36 @@ export default function SettingsPage() {
                                         <TableHeader>
                                             <TableRow>
                                                 <TableHead>名前</TableHead>
-                                                <TableHead>メールアドレス</TableHead>
-                                                <TableHead>電話番号</TableHead>
-                                                <TableHead>ステータス</TableHead>
-                                                <TableHead>アクション</TableHead>
+                                                {!isMobile && <TableHead>メールアドレス</TableHead>}
+                                                {!isMobile && <TableHead>電話番号</TableHead>}
+                                                {!isMobile && <TableHead>ステータス</TableHead>}
+                                                <TableHead></TableHead>
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
                                             {filteredClients.map((client) => (
                                                 <TableRow key={client.id}>
                                                     <TableCell className="font-medium">{client.name}</TableCell>
-                                                    <TableCell>{client.email || "-"}</TableCell>
-                                                    <TableCell>{client.phone || "-"}</TableCell>
+                                                    {!isMobile && <TableCell>{client.email || "-"}</TableCell>}
+                                                    {!isMobile && <TableCell>{client.phone || "-"}</TableCell>}
+                                                    {!isMobile && (
+                                                        <TableCell>
+                                                            <Badge variant={client.status === "active" ? "default" : "secondary"}>
+                                                                {client.status === "active" ? "アクティブ" : "非アクティブ"}
+                                                            </Badge>
+                                                        </TableCell>
+                                                    )}
                                                     <TableCell>
-                                                        <Badge variant={client.status === "active" ? "default" : "secondary"}>
-                                                            {client.status === "active" ? "アクティブ" : "非アクティブ"}
-                                                        </Badge>
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <div className="flex items-center space-x-2">
-                                                            <Button
-                                                                variant="outline"
-                                                                size="sm"
-                                                                onClick={() => toggleClientStatus(client.id!, client.status)}
-                                                            >
-                                                                {client.status === "active" ? "非アクティブ化" : "アクティブ化"}
-                                                            </Button>
+                                                        <div className="flex items-center space-x-2 justify-end"> {/* 右寄せ */}
+                                                            {!isMobile && (
+                                                                <Button
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    onClick={() => toggleClientStatus(client.id!, client.status)}
+                                                                >
+                                                                    {client.status === "active" ? "非アクティブ化" : "アクティブ化"}
+                                                                </Button>
+                                                            )}
                                                             <DropdownMenu>
                                                                 <DropdownMenuTrigger asChild>
                                                                     <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
@@ -473,6 +489,70 @@ export default function SettingsPage() {
                                                                     </Button>
                                                                 </DropdownMenuTrigger>
                                                                 <DropdownMenuContent align="end">
+                                                                    {isMobile && (
+                                                                        <Dialog>
+                                                                            <DialogTrigger asChild>
+                                                                                <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                                                                                    <MoreVertical className="mr-2 h-4 w-4" />
+                                                                                    詳細
+                                                                                </DropdownMenuItem>
+                                                                            </DialogTrigger>
+                                                                            <DialogContent>
+                                                                                <DialogHeader>
+                                                                                    <DialogTitle>{client.name} の詳細</DialogTitle>
+                                                                                    <DialogDescription>クライアントの追加情報</DialogDescription>
+                                                                                </DialogHeader>
+                                                                                <div className="space-y-4">
+                                                                                    <div className="space-y-2">
+                                                                                        <Label>メールアドレス</Label>
+                                                                                        <p className="text-sm text-gray-700">{client.email || "-"}</p>
+                                                                                    </div>
+                                                                                    <div className="space-y-2">
+                                                                                        <Label>電話番号</Label>
+                                                                                        <p className="text-sm text-gray-700">{client.phone || "-"}</p>
+                                                                                    </div>
+                                                                                    <div className="space-y-2 flex flex-col gap-2">
+                                                                                        <Label>ステータス</Label>
+                                                                                        <Badge variant={client.status === "active" ? "default" : "secondary"} className="w-fit">
+                                                                                            {client.status === "active" ? "アクティブ" : "非アクティブ"}
+                                                                                        </Badge>
+                                                                                    </div>
+                                                                                    <div className="space-y-2">
+                                                                                        <Label>アクション</Label>
+                                                                                        <div className="flex flex-col space-y-2">
+                                                                                            <Button
+                                                                                                variant="outline"
+                                                                                                size="sm"
+                                                                                                className="w-fit"
+                                                                                                onClick={() => toggleClientStatus(client.id!, client.status)}
+                                                                                            >
+                                                                                                {client.status === "active" ? "非アクティブ化" : "アクティブ化"}
+                                                                                            </Button>
+                                                                                            <Button
+                                                                                                variant="outline"
+                                                                                                size="sm"
+                                                                                                onClick={() => openEditDialog(client)}
+                                                                                            >
+                                                                                                編集
+                                                                                            </Button>
+                                                                                            <Button
+                                                                                                variant="destructive"
+                                                                                                size="sm"
+                                                                                                onClick={() => deleteClient(client.id!)}
+                                                                                            >
+                                                                                                削除
+                                                                                            </Button>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </div>
+                                                                                <DialogFooter>
+                                                                                    <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                                                                                        閉じる
+                                                                                    </Button>
+                                                                                </DialogFooter>
+                                                                            </DialogContent>
+                                                                        </Dialog>
+                                                                    )}
                                                                     <DropdownMenuItem onClick={() => openEditDialog(client)}>
                                                                         <Edit className="mr-2 h-4 w-4" />
                                                                         編集
