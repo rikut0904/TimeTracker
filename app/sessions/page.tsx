@@ -22,17 +22,19 @@ import {
     DropdownMenuTrigger,
     DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
-import { User, Users, Search, Plus, Trash2, CheckCircle, Edit, MoreVertical } from "lucide-react"
+import { User, Users, Search, Plus, Trash2, CheckCircle, Edit, MoreVertical, Link } from "lucide-react"
 import ProtectedRoute from "@/components/ProtectedRoute"
-import { updateSession, deleteSession as deleteSessionFromDB, subscribeToUserSessions, subscribeToUserClients } from "@/lib/firestore"
+import { updateSession, deleteSession as deleteSessionFromDB } from "@/lib/firestore"
 import type { Session, Client } from "@/lib/firestore"
 import { useAuth } from "@/contexts/AuthContext"
 import AppHeader from "@/components/AppHeader"
+import { useUserSessions } from "@/hooks/useUserSessions"
+import { useUserClients } from "@/hooks/useUserClients"
 
 export default function Sessions() {
     const { user } = useAuth()
-    const [sessions, setSessions] = useState<Session[]>([])
-    const [clients, setClients] = useState<Client[]>([])
+    const sessions = useUserSessions()
+    const clients = useUserClients()
     const [searchTerm, setSearchTerm] = useState("")
     const [filterType, setFilterType] = useState<"all" | "individual" | "group">("all")
     const [filterStatus, setFilterStatus] = useState<"all" | "planned" | "completed">("all")
@@ -48,23 +50,6 @@ export default function Sessions() {
         date: "",
         status: "completed" as "planned" | "completed",
     })
-
-    useEffect(() => {
-        if (!user) return
-
-        const unsubscribeSessions = subscribeToUserSessions(user.uid, (sessions) => {
-            setSessions(sessions)
-        })
-
-        const unsubscribeClients = subscribeToUserClients(user.uid, (clients) => {
-            setClients(clients)
-        })
-
-        return () => {
-            unsubscribeSessions()
-            unsubscribeClients()
-        }
-    }, [user])
 
     const filteredSessions = sessions
         .filter((session) => {
@@ -452,7 +437,9 @@ export default function Sessions() {
                             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
                                 キャンセル
                             </Button>
-                            <Button onClick={handleEditSession}>更新</Button>
+                            <Button onClick={handleEditSession}>
+                                更新
+                            </Button>
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>

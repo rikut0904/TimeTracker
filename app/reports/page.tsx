@@ -1,14 +1,14 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { User, Users, TrendingUp } from "lucide-react"
 import ProtectedRoute from "@/components/ProtectedRoute"
-import type { Session } from "@/lib/firestore"
 import { useAuth } from "@/contexts/AuthContext"
 import AppHeader from "@/components/AppHeader"
 import { Button } from "@/components/ui/button"
+import { useUserSessions } from "@/hooks/useUserSessions"
 
 interface Client {
   id: string
@@ -19,34 +19,9 @@ interface Client {
 }
 
 export default function Reports() {
-  const { user, userProfile } = useAuth()
-  const [sessions, setSessions] = useState<Session[]>([])
-  const [clients, setClients] = useState<Client[]>([])
-
-  useEffect(() => {
-    if (!user) return
-
-    let unsubscribe: (() => void) | undefined
-
-    const setupSubscription = async () => {
-        try {
-            const { subscribeToUserSessions } = await import("@/lib/firestore")
-            unsubscribe = subscribeToUserSessions(user.uid, (sessions) => {
-                setSessions(sessions)
-            })
-        } catch (error) {
-            console.error("Error setting up sessions subscription:", error)
-        }
-    }
-
-    setupSubscription()
-
-    return () => {
-        if (unsubscribe) {
-            unsubscribe()
-        }
-    }
-}, [user])
+  const { userProfile } = useAuth()
+  const sessions = useUserSessions()
+  const [clients, setClients] = useState<Client[]>([]) // clients state is still needed for client-specific reports
 
   // 完了したセッションのみで時間を計算
   const individualHours =

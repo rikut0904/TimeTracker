@@ -30,7 +30,6 @@ import {
     addClient,
     updateClient,
     deleteClient as deleteClientFromDB,
-    subscribeToUserClients,
     updateSession,
     getUserSessions,
     deleteSession,
@@ -39,6 +38,7 @@ import {
 import type { Client } from "@/lib/firestore"
 import { useAuth } from "@/contexts/AuthContext"
 import AppHeader from "@/components/AppHeader"
+import { useUserClients } from "@/hooks/useUserClients"
 
 interface UserProfile {
     name: string
@@ -52,7 +52,7 @@ interface UserProfile {
 
 export default function SettingsPage() {
     const { user, userProfile, updateUserProfile } = useAuth()
-    const [clients, setClients] = useState<Client[]>([])
+    const clients = useUserClients()
     const [profile, setProfile] = useState<UserProfile>({
         name: "",
         email: "",
@@ -79,15 +79,6 @@ export default function SettingsPage() {
         email: "",
         phone: "",
     })
-
-    useEffect(() => {
-        if (user) {
-            const unsubscribe = subscribeToUserClients(user.uid, setClients)
-            return () => {
-                unsubscribe()
-            }
-        }
-    }, [user])
 
     useEffect(() => {
         if (userProfile) {
