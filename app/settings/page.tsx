@@ -364,8 +364,8 @@ export default function SettingsPage() {
                         <TabsContent value="clients">
                             <Card>
                                 <CardHeader>
-                                    <div className="flex justify-between items-center">
-                                        <div>
+                                    <div className="flex md:flex-row flex-col justify-between items-center gap-3">
+                                        <div className="flex flex-col gap-2">
                                             <CardTitle>クライアント管理</CardTitle>
                                             <CardDescription>セッションを行うクライアントを管理します</CardDescription>
                                         </div>

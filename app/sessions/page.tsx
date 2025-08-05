@@ -166,8 +166,8 @@ export default function Sessions() {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                     <Card>
                         <CardHeader>
-                            <div className="flex justify-between items-center">
-                                <div>
+                            <div className="flex md:flex-row flex-col justify-between items-center gap-3">
+                                <div className="flex flex-col gap-2">
                                     <CardTitle>セッション履歴</CardTitle>
                                     <CardDescription>記録されたセッションと予定の一覧です</CardDescription>
                                 </div>
