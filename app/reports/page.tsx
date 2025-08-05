@@ -145,7 +145,7 @@ export default function Reports() {
           {/* Individual Sessions by Client */}
           <Card className="mb-8">
             <CardHeader>
-              <CardTitle>個人セッション時間</CardTitle>
+              <CardTitle>個人セッション</CardTitle>
               <CardDescription>クライアント別の個人セッション詳細</CardDescription>
             </CardHeader>
             <CardContent>
@@ -189,12 +189,12 @@ export default function Reports() {
           {/* Group Sessions */}
           <Card>
             <CardHeader>
-              <CardTitle>グループセッション時間</CardTitle>
+              <CardTitle>グループセッション</CardTitle>
               <CardDescription>グループ別のセッション詳細</CardDescription>
             </CardHeader>
             <CardContent>
               {Object.keys(groupSessionsByClient).length === 0 ? (
-                <p className="text-center text-muted-foreground py-8">グループセッションの記録がありません</p>
+                <p className="text-center text-muted-foreground sm:text-sm text-xs py-8">グループセッションの記録がありません</p>
               ) : (
                 <div className="space-y-4">
                   {Object.entries(groupSessionsByClient)
