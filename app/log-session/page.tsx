@@ -7,15 +7,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { ArrowLeft, Clock, LogOut } from "lucide-react"
+import { ArrowLeft } from "lucide-react"
 import Link from "next/link"
 import { useAuth } from "@/contexts/AuthContext"
 import ProtectedRoute from "@/components/ProtectedRoute"
-import { addSession, subscribeToUserClients } from "@/lib/firestore"
+import { addSession } from "@/lib/firestore"
 import type { Client } from "@/lib/firestore"
+import AppHeader from "@/components/AppHeader"
+import { useUserClients } from "@/hooks/useUserClients"
 
 export default function LogSession() {
-    const { user, userProfile, logout } = useAuth()
+    const { user } = useAuth()
     const router = useRouter()
     const searchParams = useSearchParams()
 
@@ -25,7 +27,7 @@ export default function LogSession() {
     // 状態に mode を追加
     const [sessionMode, setSessionMode] = useState<"completed" | "planned">(mode)
 
-    const [clients, setClients] = useState<Client[]>([])
+    const clients = useUserClients()
     const [sessionType, setSessionType] = useState<"individual" | "group">(
         (searchParams.get("type") as "individual" | "group") || "individual",
     )
@@ -35,28 +37,6 @@ export default function LogSession() {
 
     // 日付選択用の状態を更新（完了セッションでもデフォルト値を設定）
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0])
-
-    useEffect(() => {
-        if (!user) return
-
-        const unsubscribe = subscribeToUserClients(user.uid, (clients) => {
-            setClients(clients)
-        })
-
-        return () => {
-            if (unsubscribe) {
-                unsubscribe()
-            }
-        }
-    }, [user])
-
-    const handleLogout = async () => {
-        try {
-            await logout()
-        } catch (error) {
-            console.error("ログアウトエラー:", error)
-        }
-    }
 
     const durationOptions = [30, 60, 90, 120]
 
@@ -118,39 +98,7 @@ export default function LogSession() {
     return (
         <ProtectedRoute>
             <div className="min-h-screen bg-gray-50">
-                {/* Header */}
-                <header className="bg-white shadow-sm border-b">
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                        <div className="flex justify-between items-center h-16">
-                        <div className="flex items-center">
-                            <Clock className="h-8 w-8 text-blue-600" />
-                            <h1 className="ml-2 text-xl font-semibold text-gray-900">TimeTracker</h1>
-                        </div>
-                        <div className="flex items-center">
-                            <nav className="flex space-x-4">
-                                <Link href="/" className="text-gray-500 hover:text-gray-700">
-                                    ダッシュボード
-                                </Link>
-                                <Link href="/sessions" className="text-blue-600 font-medium">
-                                    セッション
-                                </Link>
-                                <Link href="/reports" className="text-gray-500 hover:text-gray-700">
-                                    レポート
-                                </Link>
-                                <Link href="/settings" className="text-gray-500 hover:text-gray-700">
-                                    設定
-                                </Link>
-                            </nav>
-                            <div className="flex items-center space-x-2 ml-6">
-                                <span className="text-sm text-gray-600">{userProfile?.name || user?.displayName || user?.email}</span>
-                                <Button variant="ghost" size="sm" onClick={handleLogout}>
-                                    <LogOut className="h-4 w-4" />
-                                </Button>
-                            </div>
-                        </div>
-                    </div>
-                    </div>
-                </header>
+                <AppHeader />
 
                 <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                     <div className="mb-6">
@@ -224,7 +172,7 @@ export default function LogSession() {
                                         {clients
                                             .filter((client) => client.status === "active")
                                             .map((client) => (
-                                                <SelectItem key={client.id} value={client.id}>
+                                                <SelectItem key={client.id!} value={client.id!}>
                                                     {client.name}
                                                 </SelectItem>
                                             ))}

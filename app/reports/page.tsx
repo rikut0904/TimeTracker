@@ -3,12 +3,12 @@
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
-import { Button } from "@/components/ui/button"
-import { Clock, User, Users, TrendingUp, LogOut } from "lucide-react"
-import Link from "next/link"
-import { useAuth } from "@/contexts/AuthContext"
+import { User, Users, TrendingUp } from "lucide-react"
 import ProtectedRoute from "@/components/ProtectedRoute"
 import type { Session } from "@/lib/firestore"
+import { useAuth } from "@/contexts/AuthContext"
+import AppHeader from "@/components/AppHeader"
+import { Button } from "@/components/ui/button"
 
 interface Client {
   id: string
@@ -19,7 +19,7 @@ interface Client {
 }
 
 export default function Reports() {
-  const { user, userProfile, logout } = useAuth()
+  const { user, userProfile } = useAuth()
   const [sessions, setSessions] = useState<Session[]>([])
   const [clients, setClients] = useState<Client[]>([])
 
@@ -31,7 +31,7 @@ export default function Reports() {
     const setupSubscription = async () => {
         try {
             const { subscribeToUserSessions } = await import("@/lib/firestore")
-            unsubscribe = await subscribeToUserSessions(user.uid, (sessions) => {
+            unsubscribe = subscribeToUserSessions(user.uid, (sessions) => {
                 setSessions(sessions)
             })
         } catch (error) {
@@ -47,14 +47,6 @@ export default function Reports() {
         }
     }
 }, [user])
-
-  const handleLogout = async () => {
-    try {
-      await logout()
-    } catch (error) {
-      console.error("ログアウトエラー:", error)
-    }
-  }
 
   // 完了したセッションのみで時間を計算
   const individualHours =
@@ -119,39 +111,7 @@ export default function Reports() {
   return (
     <ProtectedRoute>
       <div className="min-h-screen bg-gray-50">
-        {/* Header */}
-        <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <Clock className="h-8 w-8 text-blue-600" />
-              <h1 className="ml-2 text-xl font-semibold text-gray-900">TimeTracker</h1>
-            </div>
-            <div className="flex items-center">
-              <nav className="flex space-x-4">
-                <Link href="/" className="text-gray-500 hover:text-gray-700">
-                  ダッシュボード
-                </Link>
-                <Link href="/sessions" className="text-gray-500 hover:text-gray-700">
-                  セッション
-                </Link>
-                <Link href="/reports" className="text-blue-600 font-medium">
-                  レポート
-                </Link>
-                <Link href="/settings" className="text-gray-500 hover:text-gray-700">
-                  設定
-                </Link>
-              </nav>
-              <div className="flex items-center space-x-2 ml-6">
-                <span className="text-sm text-gray-600">{userProfile?.name || user?.displayName || user?.email}</span>
-                <Button variant="ghost" size="sm" onClick={handleLogout}>
-                  <LogOut className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
+        <AppHeader />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="mb-8">

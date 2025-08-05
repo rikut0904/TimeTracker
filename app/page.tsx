@@ -1,43 +1,19 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
-import { Plus, Clock, Users, User, Badge, LogOut } from "lucide-react"
+import { Plus, Users, User, Badge } from "lucide-react"
 import Link from "next/link"
 import ProtectedRoute from "@/components/ProtectedRoute"
 import { useAuth } from "@/contexts/AuthContext"
-import type { Session } from "@/lib/firestore"
+import AppHeader from "@/components/AppHeader"
+import { useUserSessions } from "@/hooks/useUserSessions"
 
 export default function Dashboard() {
-    const { user, userProfile, logout } = useAuth()
-    const [sessions, setSessions] = useState<Session[]>([])
-
-    useEffect(() => {
-        if (!user) return
-
-        let unsubscribe: (() => void) | undefined
-
-        const setupSubscription = async () => {
-            try {
-                const { subscribeToUserSessions } = await import("@/lib/firestore")
-                unsubscribe = await subscribeToUserSessions(user.uid, (sessions) => {
-                    setSessions(sessions)
-                })
-            } catch (error) {
-                console.error("Error setting up sessions subscription:", error)
-            }
-        }
-
-        setupSubscription()
-
-        return () => {
-            if (unsubscribe) {
-                unsubscribe()
-            }
-        }
-    }, [user])
+    const { userProfile } = useAuth()
+    const sessions = useUserSessions()
 
     // 完了したセッションのみで時間を計算
     const individualHours =
@@ -68,50 +44,10 @@ export default function Dashboard() {
 
     const recentSessions = sessions.slice(0, 5)
 
-    const handleLogout = async () => {
-        try {
-            await logout()
-        } catch (error) {
-            console.error("ログアウトエラー:", error)
-        }
-    }
-
     return (
         <ProtectedRoute>
             <div className="min-h-screen bg-gray-50">
-                {/* Header */}
-                <header className="bg-white shadow-sm border-b">
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                        <div className="flex justify-between items-center h-16">
-                            <div className="flex items-center">
-                                <Clock className="h-8 w-8 text-blue-600" />
-                                <h1 className="ml-2 text-xl font-semibold text-gray-900">TimeTracker</h1>
-                            </div>
-                            <div className="flex items-center">
-                                <nav className="flex space-x-4">
-                                    <Link href="/" className="text-blue-600 font-medium">
-                                        ダッシュボード
-                                    </Link>
-                                    <Link href="/sessions" className="text-gray-500 hover:text-gray-700">
-                                        セッション
-                                    </Link>
-                                    <Link href="/reports" className="text-gray-500 hover:text-gray-700">
-                                        レポート
-                                    </Link>
-                                    <Link href="/settings" className="text-gray-500 hover:text-gray-700">
-                                        設定
-                                    </Link>
-                                </nav>
-                                <div className="flex items-center space-x-2 ml-6">
-                                    <span className="text-sm text-gray-600">{userProfile?.name || user?.displayName || user?.email}</span>
-                                    <Button variant="ghost" size="sm" onClick={handleLogout}>
-                                        <LogOut className="h-4 w-4" />
-                                    </Button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </header>
+                <AppHeader />
 
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                     {/* Progress Overview */}

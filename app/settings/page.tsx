@@ -24,9 +24,7 @@ import {
     DropdownMenuTrigger,
     DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
-import { Clock, Plus, Search, Trash2, Edit, MoreVertical, User, Settings, Users, LogOut } from "lucide-react"
-import Link from "next/link"
-import { useAuth } from "@/contexts/AuthContext"
+import { Plus, Search, Trash2, Edit, MoreVertical, User, Settings, Users } from "lucide-react"
 import ProtectedRoute from "@/components/ProtectedRoute"
 import {
     addClient,
@@ -39,6 +37,8 @@ import {
     deleteField,
 } from "@/lib/firestore"
 import type { Client } from "@/lib/firestore"
+import { useAuth } from "@/contexts/AuthContext"
+import AppHeader from "@/components/AppHeader"
 
 interface UserProfile {
     name: string
@@ -51,7 +51,7 @@ interface UserProfile {
 }
 
 export default function SettingsPage() {
-    const { user, userProfile, logout, updateUserProfile } = useAuth()
+    const { user, userProfile, updateUserProfile } = useAuth()
     const [clients, setClients] = useState<Client[]>([])
     const [profile, setProfile] = useState<UserProfile>({
         name: "",
@@ -103,14 +103,6 @@ export default function SettingsPage() {
         } catch (error) {
             console.error("プロフィール保存エラー:", error)
             alert("プロフィールの保存に失敗しました。")
-        }
-    }
-
-    const handleLogout = async () => {
-        try {
-            await logout()
-        } catch (error) {
-            console.error("ログアウトエラー:", error)
         }
     }
 
@@ -244,39 +236,7 @@ export default function SettingsPage() {
     return (
         <ProtectedRoute>
             <div className="min-h-screen bg-gray-50">
-                {/* Header */}
-                <header className="bg-white shadow-sm border-b">
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                        <div className="flex justify-between items-center h-16">
-                            <div className="flex items-center">
-                                <Clock className="h-8 w-8 text-blue-600" />
-                                <h1 className="ml-2 text-xl font-semibold text-gray-900">TimeTracker</h1>
-                            </div>
-                            <div className="flex items-center">
-                                <nav className="flex space-x-4">
-                                    <Link href="/" className="text-gray-500 hover:text-gray-700">
-                                        ダッシュボード
-                                    </Link>
-                                    <Link href="/sessions" className="text-gray-500 hover:text-gray-700">
-                                        セッション
-                                    </Link>
-                                    <Link href="/reports" className="text-gray-500 hover:text-gray-700">
-                                        レポート
-                                    </Link>
-                                    <Link href="/settings" className="text-blue-600 font-medium">
-                                        設定
-                                    </Link>
-                                </nav>
-                                <div className="flex items-center space-x-2 ml-6">
-                                    <span className="text-sm text-gray-600">{userProfile?.name || user?.displayName || user?.email}</span>
-                                    <Button variant="ghost" size="sm" onClick={handleLogout}>
-                                        <LogOut className="h-4 w-4" />
-                                    </Button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </header>
+                <AppHeader />
 
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                     <div className="mb-8">
