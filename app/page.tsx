@@ -160,6 +160,11 @@ export default function Dashboard() {
                                                 </div>
                                             </div>
                                         ))}
+                                        <div className="flex justify-center">
+                                            <Link href="/sessions" className="text-blue-600 text-sm">
+                                                セッション一覧を見る
+                                            </Link>
+                                        </div>
                                     </div>
                                 )}
                             </CardContent>
