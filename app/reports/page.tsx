@@ -9,6 +9,14 @@ import { useAuth } from "@/contexts/AuthContext"
 import AppHeader from "@/components/AppHeader"
 import { Button } from "@/components/ui/button"
 import { useUserSessions } from "@/hooks/useUserSessions"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog"
 
 interface Client {
   id: string
@@ -21,7 +29,22 @@ interface Client {
 export default function Reports() {
   const { userProfile } = useAuth()
   const sessions = useUserSessions()
-  const [clients, setClients] = useState<Client[]>([]) // clients state is still needed for client-specific reports
+  const [selectedInfo, setSelectedInfo] = useState<{ clientId: string; clientName: string; type: 'individual' | 'group' } | null>(null)
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
+
+  const handleViewDetails = (clientId: string, clientName: string, type: 'individual' | 'group') => {
+    setSelectedInfo({ clientId, clientName, type })
+    setIsDetailModalOpen(true)
+  }
+
+  const clientSessions = selectedInfo
+    ? sessions.filter(
+      (s) =>
+        s.clientId === selectedInfo.clientId &&
+        s.type === selectedInfo.type &&
+        s.status === "completed",
+    )
+    : []
 
   // 完了したセッションのみで時間を計算
   const individualHours =
@@ -167,7 +190,7 @@ export default function Reports() {
                         </div>
                         <div className="text-right">
                           <div className="font-bold">{data.totalHours.toFixed(1)}[h]</div>
-                          <Button variant="ghost" size="sm" className="text-blue-600">
+                          <Button variant="ghost" size="sm" className="text-blue-600" onClick={() => handleViewDetails(clientId, data.clientName, 'individual')}>
                             詳細
                           </Button>
                         </div>
@@ -210,7 +233,7 @@ export default function Reports() {
                         </div>
                         <div className="text-right">
                           <div className="font-bold">{data.totalHours.toFixed(1)}[h]</div>
-                          <Button variant="ghost" size="sm" className="text-blue-600">
+                          <Button variant="ghost" size="sm" className="text-blue-600" onClick={() => handleViewDetails(clientId, data.clientName, 'group')}>
                             詳細
                           </Button>
                         </div>
@@ -222,6 +245,35 @@ export default function Reports() {
           </Card>
         </div>
       </div>
+      <Dialog open={isDetailModalOpen} onOpenChange={setIsDetailModalOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>{selectedInfo?.clientName}さんのセッション詳細</DialogTitle>
+            <DialogDescription>
+              記録済みの{selectedInfo?.type === 'individual' ? '個人' : 'グループ'}セッションの一覧です。
+            </DialogDescription>
+          </DialogHeader>
+          <div className="max-h-96 overflow-y-auto py-4">
+            {clientSessions.length > 0 ? (
+              <ul className="space-y-2">
+                {clientSessions.map((session) => (
+                  <li key={session.id} className="flex justify-between items-center p-2 bg-gray-100 rounded">
+                    <span className="text-sm">{session.date.toLocaleDateString("ja-JP")}</span>
+                    <span className="text-sm font-medium">{session.duration}分</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm text-muted-foreground text-center">このクライアントのセッション記録はありません。</p>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDetailModalOpen(false)}>
+              閉じる
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </ProtectedRoute>
   )
 }

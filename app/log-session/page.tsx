@@ -111,11 +111,11 @@ export default function LogSession() {
                     <Card>
                         {/* CardHeader を更新 */}
                         <CardHeader>
-                            <CardTitle>{sessionMode === "planned" ? "予定セッションを登録" : "新しいセッションを記録"}</CardTitle>
+                            <CardTitle>{sessionMode === "planned" ? "予定セッションを登録" : "セッションを記録"}</CardTitle>
                             <CardDescription>
                                 {sessionMode === "planned"
                                     ? "今後予定しているセッションの詳細を入力してください"
-                                    : "実習セッションの詳細を入力してください"}
+                                    : "終了済みのセッションの時間数を入力してください"}
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-6">
@@ -126,14 +126,14 @@ export default function LogSession() {
                                     <Button
                                         variant={sessionMode === "completed" ? "default" : "outline"}
                                         onClick={() => setSessionMode("completed")}
-                                        className="w-full"
+                                        className="w-full sm:text-sm text-xs"
                                     >
-                                        完了したセッション
+                                        終了済みセッション
                                     </Button>
                                     <Button
                                         variant={sessionMode === "planned" ? "default" : "outline"}
                                         onClick={() => setSessionMode("planned")}
-                                        className="w-full"
+                                        className="w-full sm:text-sm text-xs"
                                     >
                                         予定セッション
                                     </Button>
@@ -147,14 +147,14 @@ export default function LogSession() {
                                     <Button
                                         variant={sessionType === "individual" ? "default" : "outline"}
                                         onClick={() => setSessionType("individual")}
-                                        className="w-full"
+                                        className="w-full sm:text-sm text-xs"
                                     >
                                         個人セッション
                                     </Button>
                                     <Button
                                         variant={sessionType === "group" ? "default" : "outline"}
                                         onClick={() => setSessionType("group")}
-                                        className="w-full"
+                                        className="w-full sm:text-sm text-xs"
                                     >
                                         グループセッション
                                     </Button>
