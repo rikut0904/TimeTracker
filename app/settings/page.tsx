@@ -247,22 +247,20 @@ export default function SettingsPage() {
                         <p className="text-gray-600">アカウント情報とアプリケーションの設定を管理します</p>
                     </div>
 
-                    <Tabs defaultValue="profile" className="space-y-6">
-                        <TabsList className="grid w-full grid-cols-[1fr_1fr_1.4fr]">
-                            <div className="flex items-center justify-center text-center">
-                                <TabsTrigger value="profile" className="flex items-center justify-center text-center">
-                                    <User className="h-4 w-4 md:size-5 hidden md:block" />
-                                    <span className="md:text-sm text-xs px-1 py-1 rounded group-data-[state=active]:bg-white">個人情報</span>
-                                </TabsTrigger>
-                                <TabsTrigger value="goals" className="flex items-center justify-center text-center">
-                                    <Settings className="h-4 w-4 md:size-5 hidden md:block" />
-                                    <span className="md:text-sm text-xs px-1 py-1 rounded group-data-[state=active]:bg-white">目標設定</span>
-                                </TabsTrigger>
-                                <TabsTrigger value="clients" className="flex items-center justify-center text-center">
-                                    <Users className="h-4 w-4 md:size-5 hidden md:block" />
-                                    <span className="md:text-sm text-xs px-1 py-1 rounded group-data-[state=active]:bg-white">クライアント管理</span>
-                                </TabsTrigger>
-                            </div>
+                    <Tabs defaultValue="profile">
+                        <TabsList className="grid w-full md:grid-cols-3 grid-cols-[1fr_1fr_1.4fr]">
+                            <TabsTrigger value="profile" className="flex items-center justify-center text-center">
+                                <User className="h-4 w-4 md:size-5 hidden md:block" />
+                                <span className="md:text-sm text-xs">個人情報</span>
+                            </TabsTrigger>
+                            <TabsTrigger value="goals" className="flex items-center justify-center text-center">
+                                <Settings className="h-4 w-4 md:size-5 hidden md:block" />
+                                <span className="md:text-sm text-xs">目標設定</span>
+                            </TabsTrigger>
+                            <TabsTrigger value="clients" className="flex items-center justify-center text-center">
+                                <Users className="h-4 w-4 md:size-5 hidden md:block" />
+                                <span className="md:text-sm text-xs">クライアント管理</span>
+                            </TabsTrigger>
                         </TabsList>
 
                         {/* 個人情報タブ */}
