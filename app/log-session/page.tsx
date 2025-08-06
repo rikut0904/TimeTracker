@@ -38,7 +38,7 @@ export default function LogSession() {
     // 日付選択用の状態を更新（完了セッションでもデフォルト値を設定）
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0])
 
-    const durationOptions = [30, 60, 90, 120]
+    const durationOptions = [20, 30, 40, 60]
 
     // handleSubmit を更新
     const handleSubmit = async () => {
@@ -48,7 +48,7 @@ export default function LogSession() {
         }
 
         if (!selectedClient || (!duration && !customDuration)) {
-            alert("セッションタイプ、クライアント、時間を選択してください")
+            alert("セッションタイプ、クライエント、時間を選択してください")
             return
         }
 
@@ -60,7 +60,7 @@ export default function LogSession() {
 
         const client = clients.find((c) => c.id === selectedClient)
         if (!client) {
-            alert("クライアントが見つかりません")
+            alert("クライエントが見つかりません")
             return
         }
 
@@ -163,10 +163,10 @@ export default function LogSession() {
 
                             {/* Client Selection */}
                             <div className="space-y-2">
-                                <Label>クライアント</Label>
+                                <Label>クライエント</Label>
                                 <Select value={selectedClient} onValueChange={setSelectedClient}>
                                     <SelectTrigger>
-                                        <SelectValue placeholder="クライアントを選択" />
+                                        <SelectValue placeholder="クライエントを選択" />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {clients

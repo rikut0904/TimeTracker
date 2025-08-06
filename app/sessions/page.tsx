@@ -99,7 +99,7 @@ export default function Sessions() {
 
     const handleEditSession = async () => {
         if (!editSession.clientId || (!editSession.duration && !editSession.customDuration)) {
-            alert("クライアントと時間を選択してください")
+            alert("クライエントと時間を選択してください")
             return
         }
 
@@ -113,7 +113,7 @@ export default function Sessions() {
 
         const client = clients.find((c) => c.id === editSession.clientId)
         if (!client) {
-            alert("クライアントが見つかりません")
+            alert("クライエントが見つかりません")
             return
         }
 
@@ -193,7 +193,7 @@ export default function Sessions() {
                                 <div className="flex items-center space-x-2 flex-1">
                                     <Search className="h-4 w-4 text-gray-400" />
                                     <Input
-                                        placeholder="クライアント名で検索..."
+                                        placeholder="クライエント名で検索..."
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
                                     />
@@ -374,13 +374,13 @@ export default function Sessions() {
 
                             {/* Client Selection */}
                             <div className="space-y-2">
-                                <Label>クライアント</Label>
+                                <Label>クライエント</Label>
                                 <Select
                                     value={editSession.clientId}
                                     onValueChange={(value) => setEditSession({ ...editSession, clientId: value })}
                                 >
                                     <SelectTrigger>
-                                        <SelectValue placeholder="クライアントを選択" />
+                                        <SelectValue placeholder="クライエントを選択" />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {clients

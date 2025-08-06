@@ -82,7 +82,7 @@ export const subscribeToUserSessions = (userId: string, callback: (sessions: Ses
   return unsubscribe
 }
 
-// クライアント関連の操作
+// クライエント関連の操作
 export const addClient = async (userId: string, clientData: Omit<Client, "id">) => {
   const docRef = await addDoc(collection(db, "users", userId, "clients"), {
     ...clientData,

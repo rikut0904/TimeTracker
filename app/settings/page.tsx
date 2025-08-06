@@ -75,7 +75,7 @@ export default function SettingsPage() {
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
-    // クライアント管理用の状態
+    // クライエント管理用の状態
     const [searchTerm, setSearchTerm] = useState("")
     const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
     const [newClient, setNewClient] = useState({
@@ -109,7 +109,7 @@ export default function SettingsPage() {
         }
     }
 
-    // クライアント管理機能
+    // クライエント管理機能
     const filteredClients = clients.filter(
         (client) =>
             client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -118,7 +118,7 @@ export default function SettingsPage() {
 
     const handleAddClient = async () => {
         if (!newClient.name.trim() || !user) {
-            alert("クライアント名を入力してください")
+            alert("クライエント名を入力してください")
             return
         }
 
@@ -138,16 +138,16 @@ export default function SettingsPage() {
             await addClient(user.uid, clientData)
             setNewClient({ name: "", email: "", phone: "" })
             setIsAddDialogOpen(false)
-            alert("クライアントを追加しました")
+            alert("クライエントを追加しました")
         } catch (error) {
-            console.error("クライアントの追加に失敗しました:", error)
-            alert("クライアントの追加に失敗しました。")
+            console.error("クライエントの追加に失敗しました:", error)
+            alert("クライエントの追加に失敗しました。")
         }
     }
 
     const handleEditClient = async () => {
         if (!editClient.name.trim() || !editingClient || !user) {
-            alert("クライアント名を入力してください")
+            alert("クライエント名を入力してください")
             return
         }
 
@@ -170,7 +170,7 @@ export default function SettingsPage() {
         try {
             await updateClient(user.uid, editingClient.id!, updates)
 
-            // 関連セッションのクライアント名も更新
+            // 関連セッションのクライエント名も更新
             const sessions = await getUserSessions(user.uid)
             const relatedSessions = sessions.filter((session) => session.clientId === editingClient.id)
             for (const session of relatedSessions) {
@@ -180,10 +180,10 @@ export default function SettingsPage() {
             setEditingClient(null)
             setEditClient({ name: "", email: "", phone: "" })
             setIsEditDialogOpen(false)
-            alert("クライアント情報を更新しました")
+            alert("クライエント情報を更新しました")
         } catch (error) {
-            console.error("クライアント情報の更新に失敗しました:", error)
-            alert("クライアント情報の更新に失敗しました。")
+            console.error("クライエント情報の更新に失敗しました:", error)
+            alert("クライエント情報の更新に失敗しました。")
         }
     }
 
@@ -202,8 +202,8 @@ export default function SettingsPage() {
         try {
             await updateClient(user.uid, clientId, { status: currentStatus === "active" ? "inactive" : "active" })
         } catch (error) {
-            console.error("クライアントステータスの更新に失敗しました:", error)
-            alert("クライアントステータスの更新に失敗しました。")
+            console.error("クライエントステータスの更新に失敗しました:", error)
+            alert("クライエントステータスの更新に失敗しました。")
         }
     }
 
@@ -217,7 +217,7 @@ export default function SettingsPage() {
 
         let confirmMessage = `「${clientToDelete.name}」を削除しますか？`
         if (relatedSessions.length > 0) {
-            confirmMessage += `\n\n注意: このクライアントには${relatedSessions.length}件のセッション記録があります。クライアントを削除すると、これらのセッション記録もすべて削除されます。`
+            confirmMessage += `\n\n注意: このクライエントには${relatedSessions.length}件のセッション記録があります。クライエントを削除すると、これらのセッション記録もすべて削除されます。`
         }
 
         if (confirm(confirmMessage)) {
@@ -226,11 +226,11 @@ export default function SettingsPage() {
                 for (const session of relatedSessions) {
                     await deleteSession(user.uid, session.id!)
                 }
-                // クライアントを削除
+                // クライエントを削除
                 await deleteClientFromDB(user.uid, clientId)
                 alert(`「${clientToDelete.name}」とその関連セッションを削除しました。`)
             } catch (error) {
-                console.error("クライアントまたはセッションの削除に失敗しました:", error)
+                console.error("クライエントまたはセッションの削除に失敗しました:", error)
                 alert("削除に失敗しました。")
             }
         }
@@ -259,7 +259,7 @@ export default function SettingsPage() {
                             </TabsTrigger>
                             <TabsTrigger value="clients" className="flex items-center justify-center text-center">
                                 <Users className="h-4 w-4 md:size-5 hidden md:block" />
-                                <span className="md:text-sm text-xs">クライアント管理</span>
+                                <span className="md:text-sm text-xs">クライエント管理</span>
                             </TabsTrigger>
                         </TabsList>
 
@@ -372,26 +372,26 @@ export default function SettingsPage() {
                             </Card>
                         </TabsContent>
 
-                        {/* クライアント管理タブ */}
+                        {/* クライエント管理タブ */}
                         <TabsContent value="clients">
                             <Card>
                                 <CardHeader>
                                     <div className="flex md:flex-row flex-col justify-between items-center gap-3">
                                         <div className="flex flex-col gap-2">
-                                            <CardTitle>クライアント管理</CardTitle>
-                                            <CardDescription>セッションを行うクライアントを管理します</CardDescription>
+                                            <CardTitle>クライエント管理</CardTitle>
+                                            <CardDescription>セッションを行うクライエントを管理します</CardDescription>
                                         </div>
                                         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
                                             <DialogTrigger asChild>
                                                 <Button>
                                                     <Plus className="mr-2 h-4 w-4" />
-                                                    クライアント追加
+                                                    クライエント追加
                                                 </Button>
                                             </DialogTrigger>
                                             <DialogContent>
                                                 <DialogHeader>
-                                                    <DialogTitle>新しいクライアントを追加</DialogTitle>
-                                                    <DialogDescription>クライアントの基本情報を入力してください</DialogDescription>
+                                                    <DialogTitle>新しいクライエントを追加</DialogTitle>
+                                                    <DialogDescription>クライエントの基本情報を入力してください</DialogDescription>
                                                 </DialogHeader>
                                                 <div className="space-y-4">
                                                     <div className="space-y-2">
@@ -400,7 +400,7 @@ export default function SettingsPage() {
                                                             id="name"
                                                             value={newClient.name}
                                                             onChange={(e) => setNewClient({ ...newClient, name: e.target.value })}
-                                                            placeholder="クライアント名"
+                                                            placeholder="クライエント名"
                                                         />
                                                     </div>
                                                     <div className="space-y-2">
@@ -440,7 +440,7 @@ export default function SettingsPage() {
                                     <div className="flex items-center space-x-2 mb-6">
                                         <Search className="h-4 w-4 text-gray-400" />
                                         <Input
-                                            placeholder="クライアントを検索..."
+                                            placeholder="クライエントを検索..."
                                             value={searchTerm}
                                             onChange={(e) => setSearchTerm(e.target.value)}
                                             className="max-w-sm"
@@ -500,7 +500,7 @@ export default function SettingsPage() {
                                                                             <DialogContent>
                                                                                 <DialogHeader>
                                                                                     <DialogTitle>{client.name} の詳細</DialogTitle>
-                                                                                    <DialogDescription>クライアントの追加情報</DialogDescription>
+                                                                                    <DialogDescription>クライエントの追加情報</DialogDescription>
                                                                                 </DialogHeader>
                                                                                 <div className="space-y-4">
                                                                                     <div className="space-y-2">
@@ -576,7 +576,7 @@ export default function SettingsPage() {
 
                                     {filteredClients.length === 0 && (
                                         <div className="text-center py-8 text-gray-500">
-                                            {searchTerm ? "検索結果が見つかりません" : "クライアントが登録されていません"}
+                                            {searchTerm ? "検索結果が見つかりません" : "クライエントが登録されていません"}
                                         </div>
                                     )}
                                 </CardContent>
@@ -589,8 +589,8 @@ export default function SettingsPage() {
                 <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
                     <DialogContent>
                         <DialogHeader>
-                            <DialogTitle>クライアント情報を編集</DialogTitle>
-                            <DialogDescription>クライアントの情報を変更してください</DialogDescription>
+                            <DialogTitle>クライエント情報を編集</DialogTitle>
+                            <DialogDescription>クライエントの情報を変更してください</DialogDescription>
                         </DialogHeader>
                         <div className="space-y-4">
                             <div className="space-y-2">
@@ -599,7 +599,7 @@ export default function SettingsPage() {
                                     id="edit-name"
                                     value={editClient.name}
                                     onChange={(e) => setEditClient({ ...editClient, name: e.target.value })}
-                                    placeholder="クライアント名"
+                                    placeholder="クライエント名"
                                 />
                             </div>
                             <div className="space-y-2">
