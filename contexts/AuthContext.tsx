@@ -12,6 +12,7 @@ import {
   updateProfile,
 } from "firebase/auth"
 import { doc, setDoc, getDoc } from "firebase/firestore"
+import { auth, db } from "@/lib/firebase"
 
 interface UserProfile {
   name: string
@@ -47,71 +48,36 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null)
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
-  const [firebaseInitialized, setFirebaseInitialized] = useState(false)
 
-  // Firebase初期化を確認
   useEffect(() => {
-    const initializeFirebase = async () => {
-      if (typeof window !== "undefined") {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      setUser(user)
+
+      if (user && db) {
         try {
-          const { auth, db } = await import("@/lib/firebase")
-          if (auth && db) {
-            setFirebaseInitialized(true)
+          // ユーザープロフィールを取得
+          const profileDoc = await getDoc(doc(db, "users", user.uid))
+          if (profileDoc.exists()) {
+            setUserProfile(profileDoc.data() as UserProfile)
           }
         } catch (error) {
-          console.error("Firebase initialization error:", error)
-          setLoading(false)
+          console.error("Error fetching user profile:", error)
         }
+      } else {
+        setUserProfile(null)
       }
-    }
 
-    initializeFirebase()
+      setLoading(false)
+    })
+
+    return unsubscribe
   }, [])
 
-  useEffect(() => {
-    if (!firebaseInitialized) return
-
-    const setupAuthListener = async () => {
-      try {
-        const { auth, db } = await import("@/lib/firebase")
-
-        const unsubscribe = onAuthStateChanged(auth, async (user) => {
-          setUser(user)
-
-          if (user && db) {
-            try {
-              // ユーザープロフィールを取得
-              const profileDoc = await getDoc(doc(db, "users", user.uid))
-              if (profileDoc.exists()) {
-                setUserProfile(profileDoc.data() as UserProfile)
-              }
-            } catch (error) {
-              console.error("Error fetching user profile:", error)
-            }
-          } else {
-            setUserProfile(null)
-          }
-
-          setLoading(false)
-        })
-
-        return unsubscribe
-      } catch (error) {
-        console.error("Error setting up auth listener:", error)
-        setLoading(false)
-      }
-    }
-
-    setupAuthListener()
-  }, [firebaseInitialized])
-
   const login = async (email: string, password: string) => {
-    const { auth } = await import("@/lib/firebase")
     await signInWithEmailAndPassword(auth, email, password)
   }
 
   const register = async (email: string, password: string, name: string) => {
-    const { auth, db } = await import("@/lib/firebase")
     const { user } = await createUserWithEmailAndPassword(auth, email, password)
 
     // プロフィールを更新
@@ -133,14 +99,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }
 
   const logout = async () => {
-    const { auth } = await import("@/lib/firebase")
     await signOut(auth)
   }
 
   const updateUserProfile = async (profileUpdates: Partial<UserProfile>) => {
     if (!user) return
 
-    const { db } = await import("@/lib/firebase")
     const updatedProfile = { ...userProfile, ...profileUpdates } as UserProfile
     await setDoc(doc(db, "users", user.uid), updatedProfile)
     setUserProfile(updatedProfile)

@@ -68,7 +68,7 @@ export default function Reports() {
     sessions.filter((s) => s.type === "group" && s.status === "planned").reduce((total, s) => total + s.duration, 0) /
     60
 
-  // クライアント別の個人セッション時間
+  // クライエント別の個人セッション時間
   const individualSessionsByClient = sessions
     .filter((s) => s.type === "individual" && s.status === "completed")
     .reduce(
@@ -169,7 +169,7 @@ export default function Reports() {
           <Card className="mb-8">
             <CardHeader>
               <CardTitle>個人セッション</CardTitle>
-              <CardDescription>クライアント別の個人セッション詳細</CardDescription>
+              <CardDescription>クライエント別の個人セッション詳細</CardDescription>
             </CardHeader>
             <CardContent>
               {Object.keys(individualSessionsByClient).length === 0 ? (
@@ -198,7 +198,7 @@ export default function Reports() {
                     ))}
                   {Object.keys(individualSessionsByClient).length > 5 && (
                     <div className="text-center">
-                      <p className="text-sm text-muted-foreground">上位5クライアントを表示中</p>
+                      <p className="text-sm text-muted-foreground">上位5クライエントを表示中</p>
                       <Button variant="ghost" size="sm" className="text-blue-600">
                         すべて表示
                       </Button>
@@ -264,7 +264,7 @@ export default function Reports() {
                 ))}
               </ul>
             ) : (
-              <p className="text-sm text-muted-foreground text-center">このクライアントのセッション記録はありません。</p>
+              <p className="text-sm text-muted-foreground text-center">このクライエントのセッション記録はありません。</p>
             )}
           </div>
           <DialogFooter>
