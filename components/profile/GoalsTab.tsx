@@ -10,8 +10,6 @@ import { DEFAULT_GOALS } from "@/lib/constants"
 interface UserProfile {
     name: string
     email: string
-    phone: string
-    institution: string
     studentId: string
     individualGoal: number
     groupGoal: number
