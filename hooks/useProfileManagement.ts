@@ -4,8 +4,6 @@ import { useAuth } from "@/contexts/AuthContext"
 interface UserProfile {
     name: string
     email: string
-    phone: string
-    institution: string
     studentId: string
     individualGoal: number
     groupGoal: number
@@ -14,8 +12,6 @@ interface UserProfile {
 const DEFAULT_PROFILE: UserProfile = {
     name: "",
     email: "",
-    phone: "",
-    institution: "",
     studentId: "",
     individualGoal: 90,
     groupGoal: 45,

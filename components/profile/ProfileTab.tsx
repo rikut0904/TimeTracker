@@ -9,8 +9,6 @@ import { TabsContent } from "@/components/ui/tabs"
 interface UserProfile {
     name: string
     email: string
-    phone: string
-    institution: string
     studentId: string
     individualGoal: number
     groupGoal: number
@@ -49,24 +47,6 @@ export const ProfileTab = ({ profile, setProfile, onSave }: ProfileTabProps) => 
                                 value={profile.email}
                                 onChange={(e) => setProfile({ ...profile, email: e.target.value })}
                                 placeholder="example@email.com"
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="phone">電話番号</Label>
-                            <Input
-                                id="phone"
-                                value={profile.phone}
-                                onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
-                                placeholder="090-1234-5678"
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="institution">所属機関</Label>
-                            <Input
-                                id="institution"
-                                value={profile.institution}
-                                onChange={(e) => setProfile({ ...profile, institution: e.target.value })}
-                                placeholder="○○大学 心理学部"
                             />
                         </div>
                     </div>
