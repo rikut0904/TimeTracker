@@ -39,6 +39,7 @@ export default function Sessions() {
     const [searchTerm, setSearchTerm] = useState("")
     const [filterType, setFilterType] = useState<"all" | "individual" | "group">("all")
     const [filterStatus, setFilterStatus] = useState<"all" | "planned" | "completed">("all")
+    const [filterGroup, setFilterGroup] = useState<string>("all")
 
     // 編集用の状態
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
@@ -57,7 +58,19 @@ export default function Sessions() {
             const matchesSearch = session.clientName.toLowerCase().includes(searchTerm.toLowerCase())
             const matchesType = filterType === "all" || session.type === filterType
             const matchesStatus = filterStatus === "all" || session.status === filterStatus
-            return matchesSearch && matchesType && matchesStatus
+
+            // グループフィルター
+            let matchesGroup = true
+            if (filterGroup !== "all") {
+                const client = clients.find(c => c.id === session.clientId)
+                if (filterGroup === "__none__") {
+                    matchesGroup = !client?.group
+                } else {
+                    matchesGroup = client?.group === filterGroup
+                }
+            }
+
+            return matchesSearch && matchesType && matchesStatus && matchesGroup
         })
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
 
@@ -224,6 +237,23 @@ export default function Sessions() {
                                         <SelectItem value="planned">予定</SelectItem>
                                     </SelectContent>
                                 </Select>
+                                <Select
+                                    value={filterGroup}
+                                    onValueChange={(value: string) => setFilterGroup(value)}
+                                >
+                                    <SelectTrigger className="w-full sm:w-48">
+                                        <SelectValue placeholder="グループ" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">すべてのグループ</SelectItem>
+                                        <SelectItem value="__none__">グループなし</SelectItem>
+                                        {Array.from(new Set(clients.map(client => client.group).filter(Boolean))).map((group) => (
+                                            <SelectItem key={group} value={group!}>
+                                                {group}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
                             </div>
 
                             {/* Sessions List */}
@@ -384,10 +414,17 @@ export default function Sessions() {
                                     </SelectTrigger>
                                     <SelectContent>
                                         {clients
-                                            .filter((client) => client.status === "active")
+                                            .sort((a, b) => {
+                                                // グループでソート、グループなしは最後
+                                                if (!a.group && !b.group) return a.name.localeCompare(b.name)
+                                                if (!a.group) return 1
+                                                if (!b.group) return -1
+                                                if (a.group !== b.group) return a.group.localeCompare(b.group)
+                                                return a.name.localeCompare(b.name)
+                                            })
                                             .map((client) => (
                                                 <SelectItem key={client.id || ""} value={client.id || ""}>
-                                                    {client.name}
+                                                    {client.name} {client.group ? `(${client.group})` : ''}
                                                 </SelectItem>
                                             ))}
                                     </SelectContent>

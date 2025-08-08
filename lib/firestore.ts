@@ -29,9 +29,7 @@ export interface Session {
 export interface Client {
   id?: string
   name: string
-  email?: string
-  phone?: string
-  status: "active" | "inactive"
+  group?: string
 }
 
 // セッション関連の操作

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
     Dialog,
@@ -80,16 +81,14 @@ export default function SettingsPage() {
     const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
     const [newClient, setNewClient] = useState({
         name: "",
-        email: "",
-        phone: "",
+        group: "",
     })
 
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
     const [editingClient, setEditingClient] = useState<Client | null>(null)
     const [editClient, setEditClient] = useState({
         name: "",
-        email: "",
-        phone: "",
+        group: "",
     })
 
     useEffect(() => {
@@ -113,7 +112,7 @@ export default function SettingsPage() {
     const filteredClients = clients.filter(
         (client) =>
             client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            (client.email && client.email.toLowerCase().includes(searchTerm.toLowerCase())),
+            (client.group && client.group.toLowerCase().includes(searchTerm.toLowerCase())),
     )
 
     const handleAddClient = async () => {
@@ -124,19 +123,12 @@ export default function SettingsPage() {
 
         const clientData: Omit<Client, "id"> = {
             name: newClient.name.trim(),
-            status: "active",
-        }
-
-        if (newClient.email.trim()) {
-            clientData.email = newClient.email.trim()
-        }
-        if (newClient.phone.trim()) {
-            clientData.phone = newClient.phone.trim()
+            group: newClient.group.trim(),
         }
 
         try {
             await addClient(user.uid, clientData)
-            setNewClient({ name: "", email: "", phone: "" })
+            setNewClient({ name: "", group: "" })
             setIsAddDialogOpen(false)
             alert("クライエントを追加しました")
         } catch (error) {
@@ -155,16 +147,10 @@ export default function SettingsPage() {
             name: editClient.name.trim(),
         }
 
-        if (editClient.email.trim()) {
-            updates.email = editClient.email.trim()
+        if (editClient.group.trim()) {
+            updates.group = editClient.group.trim()
         } else {
-            updates.email = deleteField()
-        }
-
-        if (editClient.phone.trim()) {
-            updates.phone = editClient.phone.trim()
-        } else {
-            updates.phone = deleteField()
+            updates.group = deleteField()
         }
 
         try {
@@ -178,7 +164,7 @@ export default function SettingsPage() {
             }
 
             setEditingClient(null)
-            setEditClient({ name: "", email: "", phone: "" })
+            setEditClient({ name: "", group: "" })
             setIsEditDialogOpen(false)
             alert("クライエント情報を更新しました")
         } catch (error) {
@@ -191,21 +177,12 @@ export default function SettingsPage() {
         setEditingClient(client)
         setEditClient({
             name: client.name,
-            email: client.email || "",
-            phone: client.phone || "",
+            group: client.group || "",
         })
         setIsEditDialogOpen(true)
     }
 
-    const toggleClientStatus = async (clientId: string, currentStatus: "active" | "inactive") => {
-        if (!user) return
-        try {
-            await updateClient(user.uid, clientId, { status: currentStatus === "active" ? "inactive" : "active" })
-        } catch (error) {
-            console.error("クライエントステータスの更新に失敗しました:", error)
-            alert("クライエントステータスの更新に失敗しました。")
-        }
-    }
+
 
     const deleteClient = async (clientId: string) => {
         if (!user) return
@@ -404,23 +381,28 @@ export default function SettingsPage() {
                                                         />
                                                     </div>
                                                     <div className="space-y-2">
-                                                        <Label htmlFor="email">メールアドレス</Label>
-                                                        <Input
-                                                            id="email"
-                                                            type="email"
-                                                            value={newClient.email}
-                                                            onChange={(e) => setNewClient({ ...newClient, email: e.target.value })}
-                                                            placeholder="example@email.com"
-                                                        />
-                                                    </div>
-                                                    <div className="space-y-2">
-                                                        <Label htmlFor="phone">電話番号</Label>
-                                                        <Input
-                                                            id="phone"
-                                                            value={newClient.phone}
-                                                            onChange={(e) => setNewClient({ ...newClient, phone: e.target.value })}
-                                                            placeholder="090-1234-5678"
-                                                        />
+                                                        <Label htmlFor="group">グループ</Label>
+                                                        <Select value={newClient.group} onValueChange={(value) => setNewClient({ ...newClient, group: value === "__none__" ? "" : value })}>
+                                                            <SelectTrigger>
+                                                                <SelectValue placeholder="グループを選択または新規作成" />
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                                <SelectItem value="__none__">グループなし</SelectItem>
+                                                                {Array.from(new Set(clients.map(client => client.group).filter(Boolean))).map((group) => (
+                                                                    <SelectItem key={group} value={group!}>
+                                                                        {group}
+                                                                    </SelectItem>
+                                                                ))}
+                                                                <SelectItem value="__new__">+ 新しいグループを作成</SelectItem>
+                                                            </SelectContent>
+                                                        </Select>
+                                                        {newClient.group === "__new__" && (
+                                                            <Input
+                                                                placeholder="新しいグループ名を入力"
+                                                                value={newClient.group === "__new__" ? "" : newClient.group}
+                                                                onChange={(e) => setNewClient({ ...newClient, group: e.target.value })}
+                                                            />
+                                                        )}
                                                     </div>
                                                 </div>
                                                 <DialogFooter>
@@ -452,9 +434,7 @@ export default function SettingsPage() {
                                         <TableHeader>
                                             <TableRow>
                                                 <TableHead>名前</TableHead>
-                                                {!isMobile && <TableHead>メールアドレス</TableHead>}
-                                                {!isMobile && <TableHead>電話番号</TableHead>}
-                                                {!isMobile && <TableHead>ステータス</TableHead>}
+                                                {!isMobile && <TableHead>グループ</TableHead>}
                                                 <TableHead></TableHead>
                                             </TableRow>
                                         </TableHeader>
@@ -462,26 +442,9 @@ export default function SettingsPage() {
                                             {filteredClients.map((client) => (
                                                 <TableRow key={client.id}>
                                                     <TableCell className="font-medium">{client.name}</TableCell>
-                                                    {!isMobile && <TableCell>{client.email || "-"}</TableCell>}
-                                                    {!isMobile && <TableCell>{client.phone || "-"}</TableCell>}
-                                                    {!isMobile && (
-                                                        <TableCell>
-                                                            <Badge variant={client.status === "active" ? "default" : "secondary"}>
-                                                                {client.status === "active" ? "アクティブ" : "非アクティブ"}
-                                                            </Badge>
-                                                        </TableCell>
-                                                    )}
+                                                    {!isMobile && <TableCell>{client.group || "-"}</TableCell>}
                                                     <TableCell>
                                                         <div className="flex items-center space-x-2 justify-end"> {/* 右寄せ */}
-                                                            {!isMobile && (
-                                                                <Button
-                                                                    variant="outline"
-                                                                    size="sm"
-                                                                    onClick={() => toggleClientStatus(client.id!, client.status)}
-                                                                >
-                                                                    {client.status === "active" ? "非アクティブ化" : "アクティブ化"}
-                                                                </Button>
-                                                            )}
                                                             <DropdownMenu>
                                                                 <DropdownMenuTrigger asChild>
                                                                     <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
@@ -504,30 +467,12 @@ export default function SettingsPage() {
                                                                                 </DialogHeader>
                                                                                 <div className="space-y-4">
                                                                                     <div className="space-y-2">
-                                                                                        <Label>メールアドレス</Label>
-                                                                                        <p className="text-sm text-gray-700">{client.email || "-"}</p>
-                                                                                    </div>
-                                                                                    <div className="space-y-2">
-                                                                                        <Label>電話番号</Label>
-                                                                                        <p className="text-sm text-gray-700">{client.phone || "-"}</p>
-                                                                                    </div>
-                                                                                    <div className="space-y-2 flex flex-col gap-2">
-                                                                                        <Label>ステータス</Label>
-                                                                                        <Badge variant={client.status === "active" ? "default" : "secondary"} className="w-fit">
-                                                                                            {client.status === "active" ? "アクティブ" : "非アクティブ"}
-                                                                                        </Badge>
+                                                                                        <Label>グループ</Label>
+                                                                                        <p className="text-sm text-gray-700">{client.group || "-"}</p>
                                                                                     </div>
                                                                                     <div className="space-y-2">
                                                                                         <Label>アクション</Label>
                                                                                         <div className="flex flex-col space-y-2">
-                                                                                            <Button
-                                                                                                variant="outline"
-                                                                                                size="sm"
-                                                                                                className="w-fit"
-                                                                                                onClick={() => toggleClientStatus(client.id!, client.status)}
-                                                                                            >
-                                                                                                {client.status === "active" ? "非アクティブ化" : "アクティブ化"}
-                                                                                            </Button>
                                                                                             <Button
                                                                                                 variant="outline"
                                                                                                 size="sm"
@@ -603,23 +548,28 @@ export default function SettingsPage() {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="edit-email">メールアドレス</Label>
-                                <Input
-                                    id="edit-email"
-                                    type="email"
-                                    value={editClient.email}
-                                    onChange={(e) => setEditClient({ ...editClient, email: e.target.value })}
-                                    placeholder="example@email.com"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="edit-phone">電話番号</Label>
-                                <Input
-                                    id="edit-phone"
-                                    value={editClient.phone}
-                                    onChange={(e) => setEditClient({ ...editClient, phone: e.target.value })}
-                                    placeholder="090-1234-5678"
-                                />
+                                <Label htmlFor="edit-group">グループ</Label>
+                                <Select value={editClient.group || "__none__"} onValueChange={(value) => setEditClient({ ...editClient, group: value === "__none__" ? "" : value })}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="グループを選択または新規作成" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="__none__">グループなし</SelectItem>
+                                        {Array.from(new Set(clients.map(client => client.group).filter(Boolean))).map((group) => (
+                                            <SelectItem key={group} value={group!}>
+                                                {group}
+                                            </SelectItem>
+                                        ))}
+                                        <SelectItem value="__new__">+ 新しいグループを作成</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                {editClient.group === "__new__" && (
+                                    <Input
+                                        placeholder="新しいグループ名を入力"
+                                        value={editClient.group === "__new__" ? "" : editClient.group}
+                                        onChange={(e) => setEditClient({ ...editClient, group: e.target.value })}
+                                    />
+                                )}
                             </div>
                         </div>
                         <DialogFooter>

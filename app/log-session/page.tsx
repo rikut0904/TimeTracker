@@ -170,10 +170,17 @@ export default function LogSession() {
                                     </SelectTrigger>
                                     <SelectContent>
                                         {clients
-                                            .filter((client) => client.status === "active")
+                                            .sort((a, b) => {
+                                                // グループでソート、グループなしは最後
+                                                if (!a.group && !b.group) return a.name.localeCompare(b.name)
+                                                if (!a.group) return 1
+                                                if (!b.group) return -1
+                                                if (a.group !== b.group) return a.group.localeCompare(b.group)
+                                                return a.name.localeCompare(b.name)
+                                            })
                                             .map((client) => (
                                                 <SelectItem key={client.id!} value={client.id!}>
-                                                    {client.name}
+                                                    {client.name} {client.group ? `(${client.group})` : ''}
                                                 </SelectItem>
                                             ))}
                                     </SelectContent>
