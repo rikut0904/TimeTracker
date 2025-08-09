@@ -21,6 +21,7 @@ export default function AppHeader() {
   const navLinks = [
     { href: "/", label: "ダッシュボード" },
     { href: "/sessions", label: "セッション" },
+    { href: "/calendar", label: "カレンダー" },
     { href: "/reports", label: "レポート" },
     { href: "/settings", label: "設定" },
   ]
