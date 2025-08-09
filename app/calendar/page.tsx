@@ -5,7 +5,7 @@ import ProtectedRoute from "@/components/ProtectedRoute"
 import AppHeader from "@/components/AppHeader"
 import { useUserSessions } from "@/hooks/useUserSessions"
 import type { Session } from "@/lib/firestore"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
@@ -98,10 +98,10 @@ export default function CalendarPage() {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                     <Card>
                         <CardHeader className="flex sm:flex-row flex-col sm:items-center sm:justify-between gap-4">
-                            <div className="flex flex-col gap-2">
+                            <div className="flex flex-row flex-wrap items-center gap-2">
                                 <CardTitle>カレンダー</CardTitle>
 
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-2 ml-2">
                                     <Button
                                         variant={showCompleted ? "default" : "outline"}
                                         size="sm"
@@ -118,11 +118,11 @@ export default function CalendarPage() {
                                     </Button>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-1">
                                 <Button variant="outline" size="sm" onClick={() => setCurrentMonth(addMonths(currentMonth, -1))}>
                                     <ChevronLeft className="h-4 w-4" />
                                 </Button>
-                                <div className="min-w-[120px] text-center text-sm font-medium">{monthTitle}</div>
+                                <div className="min-w-[90px] text-center text-sm font-medium">{monthTitle}</div>
                                 <Button variant="outline" size="sm" onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}>
                                     <ChevronRight className="h-4 w-4" />
                                 </Button>
@@ -130,59 +130,82 @@ export default function CalendarPage() {
                             </div>
                         </CardHeader>
                         <CardContent>
-                            <div className="grid grid-cols-7 text-xs text-gray-600">
-                                {weekdayLabels.map((w) => (
-                                    <div key={w} className="p-2 text-center font-medium">
-                                        {w}
-                                    </div>
-                                ))}
-                            </div>
-
-                            <div className="grid grid-cols-7 gap-[1px] bg-gray-200 rounded-md overflow-hidden">
-                                {monthInfo.cells.map((cell) => (
-                                    <div
-                                        key={cell.key}
-                                        className={`bg-white min-h-[110px] p-2 flex flex-col ${cell.inMonth ? "" : "bg-gray-50 text-gray-400"}`}
-                                    >
-                                        <div className="flex items-center justify-between">
-                                            <div className={`text-sm ${cell.inMonth ? "text-gray-900" : "text-gray-400"}`}>{new Date(cell.date).getDate()}</div>
-                                            <div className="flex items-center gap-1">
-                                                {cell.sessions.some((s) => s.status === "completed") && (
-                                                    <Badge className="bg-blue-600">完</Badge>
-                                                )}
-                                                {cell.sessions.some((s) => s.status === "planned") && (
-                                                    <Badge variant="outline" className="text-blue-700 border-blue-300">予</Badge>
-                                                )}
-                                            </div>
+                            <div className="rounded-md overflow-hidden border border-gray-200">
+                                <div className="grid grid-cols-7 text-xs text-gray-600">
+                                    {weekdayLabels.map((w, i) => (
+                                        <div
+                                            key={w}
+                                            className={`p-2 text-center font-medium bg-gray-50 border-b border-gray-200 ${i === 6 ? "" : "border-r"} ${i === 0 || i === 5 ? "border-r-2" : ""
+                                                }`}
+                                        >
+                                            {w}
                                         </div>
+                                    ))}
+                                </div>
 
-                                        <div className="mt-2 space-y-1">
-                                            {cell.sessions.slice(0, 3).map((s) => (
-                                                <button
-                                                    key={s.id}
-                                                    className={`w-full text-left truncate rounded px-2 py-1 text-[11px] ${s.status === "completed"
-                                                        ? "bg-blue-50 text-blue-800 border border-blue-200"
-                                                        : "bg-amber-50 text-amber-800 border border-amber-200"
-                                                        }`}
-                                                    onClick={() => setSelectedDateKey(cell.key)}
-                                                    title={s.clientName}
-                                                >
-                                                    {s.type === "individual" ? (
-                                                        <User className="inline h-3 w-3 mr-1" />
-                                                    ) : (
-                                                        <Users className="inline h-3 w-3 mr-1" />
+                                <div className="grid grid-cols-7">
+                                    {monthInfo.cells.map((cell, idx) => {
+                                        const col = idx % 7
+                                        const isLastCol = col === 6
+                                        const isLastRow = idx >= monthInfo.cells.length - 7
+                                        const thickRight = col === 0 || col === 5 // Sun|Fri column gets thick right border
+                                        return (
+                                            <div
+                                                key={cell.key}
+                                                className={
+                                                    `relative bg-white min-h-[84px] sm:min-h-[110px] p-1 sm:p-2 flex flex-col ` +
+                                                    `${cell.inMonth ? "" : "bg-gray-50 text-gray-400"} ` +
+                                                    `border-gray-200 border-b ${isLastRow ? "border-b-0" : ""} ` +
+                                                    `${isLastCol ? "" : "border-r"} ` +
+                                                    `${thickRight && !isLastCol ? "border-r-2" : ""}`
+                                                }
+                                            >
+                                                <div className="sm:flex sm:items-center sm:justify-between">
+                                                    <div className={`text-xs sm:text-sm ${cell.inMonth ? "text-gray-900" : "text-gray-400"}`}>{new Date(cell.date).getDate()}</div>
+                                                    <div className="flex flex-wrap items-center gap-1 mt-1 sm:mt-0 self-start sm:self-auto">
+                                                        {cell.sessions.some((s) => s.status === "completed") && (
+                                                            <Badge className="bg-blue-600 px-1.5 py-0 h-5 text-[10px] leading-none">完</Badge>
+                                                        )}
+                                                        {cell.sessions.some((s) => s.status === "planned") && (
+                                                            <Badge variant="outline" className="text-blue-700 border-blue-300 px-1.5 py-0 h-5 text-[10px] leading-none">予</Badge>
+                                                        )}
+                                                    </div>
+                                                </div>
+
+                                                <div className="mt-2 space-y-1 hidden sm:block">
+                                                    {cell.sessions.slice(0, 3).map((s) => (
+                                                        <button
+                                                            key={s.id}
+                                                            className={`w-full text-left truncate rounded px-2 py-1 text-[11px] ${s.status === "completed"
+                                                                ? "bg-blue-50 text-blue-800 border border-blue-200"
+                                                                : "bg-amber-50 text-amber-800 border border-amber-200"
+                                                                }`}
+                                                            onClick={() => setSelectedDateKey(cell.key)}
+                                                            title={s.clientName}
+                                                        >
+                                                            {s.type === "individual" ? (
+                                                                <User className="inline h-3 w-3 mr-1" />
+                                                            ) : (
+                                                                <Users className="inline h-3 w-3 mr-1" />
+                                                            )}
+                                                            {s.clientName}
+                                                        </button>
+                                                    ))}
+                                                    {cell.sessions.length > 3 && (
+                                                        <Button variant="ghost" size="sm" className="h-6 text-[11px] px-1" onClick={() => setSelectedDateKey(cell.key)}>
+                                                            他 {cell.sessions.length - 3} 件
+                                                        </Button>
                                                     )}
-                                                    {s.clientName}
-                                                </button>
-                                            ))}
-                                            {cell.sessions.length > 3 && (
-                                                <Button variant="ghost" size="sm" className="h-6 text-[11px] px-1" onClick={() => setSelectedDateKey(cell.key)}>
-                                                    他 {cell.sessions.length - 3} 件
-                                                </Button>
-                                            )}
-                                        </div>
-                                    </div>
-                                ))}
+                                                </div>
+                                                <button
+                                                    className="absolute inset-0 sm:hidden"
+                                                    onClick={() => setSelectedDateKey(cell.key)}
+                                                    aria-label="open-day"
+                                                />
+                                            </div>
+                                        )
+                                    })}
+                                </div>
                             </div>
                         </CardContent>
                     </Card>
