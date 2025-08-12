@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import ProtectedRoute from "@/components/ProtectedRoute"
 import AppHeader from "@/components/AppHeader"
 import { useUserSessions } from "@/hooks/useUserSessions"
@@ -70,6 +70,20 @@ export default function SchedulePage() {
             })
     }, [clients])
 
+    const clientOptionsByGroup = useMemo(() => {
+        if (filterGroup === "all") return clientsSorted
+        if (filterGroup === "__none__") return clientsSorted.filter((c) => !c.group)
+        return clientsSorted.filter((c) => c.group === filterGroup)
+    }, [clientsSorted, filterGroup])
+
+    useEffect(() => {
+        if (filterClientId === "all") return
+        const stillExists = clientOptionsByGroup.some((c) => c.id === filterClientId)
+        if (!stillExists) {
+            setFilterClientId("all")
+        }
+    }, [clientOptionsByGroup, filterClientId])
+
     const monthInfo = useMemo(() => {
         const start = startOfMonth(currentMonth)
         const end = endOfMonth(currentMonth)
@@ -86,7 +100,18 @@ export default function SchedulePage() {
             const d = new Date(s.date)
             const inRange = d >= calendarStart && d <= calendarEnd
             const statusOk = filterStatus === "all" || s.status === filterStatus
-            return inRange && statusOk
+            const typeOk = filterType === "all" || s.type === filterType
+            const clientOk = filterClientId === "all" || s.clientId === filterClientId
+            let groupOk = true
+            if (filterGroup !== "all") {
+                const client = clients.find((c) => c.id === s.clientId)
+                if (filterGroup === "__none__") {
+                    groupOk = !client?.group
+                } else {
+                    groupOk = client?.group === filterGroup
+                }
+            }
+            return inRange && statusOk && typeOk && clientOk && groupOk
         })
 
         const byDate = new Map<string, Session[]>()
@@ -110,7 +135,7 @@ export default function SchedulePage() {
         }
 
         return { start, end, calendarStart, calendarEnd, cells }
-    }, [sessions, currentMonth, filterStatus])
+    }, [sessions, clients, currentMonth, filterStatus, filterType, filterGroup, filterClientId])
 
     const monthTitle = `${currentMonth.getFullYear()}年 ${currentMonth.getMonth() + 1}月`
     const selectedSessions = selectedDateKey
@@ -148,7 +173,6 @@ export default function SchedulePage() {
 
     const handleSelectDay = (key: string) => {
         setSelectedDateKey(key)
-        setActiveTab("sessions")
     }
 
     return (
@@ -214,7 +238,7 @@ export default function SchedulePage() {
                                             </SelectTrigger>
                                             <SelectContent>
                                                 <SelectItem value="all">すべてのクライエント</SelectItem>
-                                                {clientsSorted.map((c) => (
+                                                {clientOptionsByGroup.map((c) => (
                                                     <SelectItem key={c.id!} value={c.id!}>
                                                         {c.name}{c.group ? ` (${c.group})` : ""}
                                                     </SelectItem>
@@ -421,7 +445,7 @@ export default function SchedulePage() {
                                             </SelectTrigger>
                                             <SelectContent>
                                                 <SelectItem value="all">すべてのクライエント</SelectItem>
-                                                {clientsSorted.map((c) => (
+                                                {clientOptionsByGroup.map((c) => (
                                                     <SelectItem key={c.id!} value={c.id!}>
                                                         {c.name}{c.group ? ` (${c.group})` : ""}
                                                     </SelectItem>
