@@ -159,9 +159,9 @@ export default function SchedulePage() {
                                         <CardTitle>カレンダー</CardTitle>
                                     </div>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:items-center">
-                                        <div className="flex flex-wrap items-center gap-2">
+                                        <div className="flex flex-col sm:flex-row items-center gap-2">
                                             <Select value={filterType} onValueChange={(v: any) => setFilterType(v)}>
-                                                <SelectTrigger className="w-36 md:w-40">
+                                                <SelectTrigger className="w-full sm:w-32 md:w-40">
                                                     <SelectValue placeholder="セッションタイプ" />
                                                 </SelectTrigger>
                                                 <SelectContent>
@@ -171,7 +171,7 @@ export default function SchedulePage() {
                                                 </SelectContent>
                                             </Select>
                                             <Select value={filterStatus} onValueChange={(v: any) => setFilterStatus(v)}>
-                                                <SelectTrigger className="w-28 md:w-36">
+                                                <SelectTrigger className="w-full sm:w-32 md:w-40">
                                                     <SelectValue placeholder="ステータス" />
                                                 </SelectTrigger>
                                                 <SelectContent>
@@ -181,7 +181,7 @@ export default function SchedulePage() {
                                                 </SelectContent>
                                             </Select>
                                             <Select value={filterGroup} onValueChange={(v: any) => setFilterGroup(v)}>
-                                                <SelectTrigger className="w-32 md:w-40">
+                                                <SelectTrigger className="w-full sm:w-32 md:w-40">
                                                     <SelectValue placeholder="グループ" />
                                                 </SelectTrigger>
                                                 <SelectContent>
