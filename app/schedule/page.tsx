@@ -52,9 +52,22 @@ export default function SchedulePage() {
     const [filterType, setFilterType] = useState<"all" | "individual" | "group">("all")
     const [filterStatus, setFilterStatus] = useState<"all" | "planned" | "completed">("all")
     const [filterGroup, setFilterGroup] = useState<string>("all")
+    const [filterClientId, setFilterClientId] = useState<string>("all")
 
     const uniqueGroups = useMemo(() => {
         return Array.from(new Set((clients || []).map((c) => c.group).filter(Boolean))) as string[]
+    }, [clients])
+
+    const clientsSorted = useMemo(() => {
+        return (clients || [])
+            .slice()
+            .sort((a, b) => {
+                if (!a.group && !b.group) return a.name.localeCompare(b.name)
+                if (!a.group) return 1
+                if (!b.group) return -1
+                if (a.group !== b.group) return (a.group || "").localeCompare(b.group || "")
+                return a.name.localeCompare(b.name)
+            })
     }, [clients])
 
     const monthInfo = useMemo(() => {
@@ -126,10 +139,12 @@ export default function SchedulePage() {
                     return client?.group === filterGroup
                 })
 
-        return byGroup.sort(
+        const byClient = filterClientId === "all" ? byGroup : byGroup.filter((s) => s.clientId === filterClientId)
+
+        return byClient.sort(
             (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
         )
-    }, [sessions, clients, searchTerm, filterType, filterStatus, filterGroup, selectedDateKey])
+    }, [sessions, clients, searchTerm, filterType, filterStatus, filterGroup, filterClientId, selectedDateKey])
 
     const handleSelectDay = (key: string) => {
         setSelectedDateKey(key)
@@ -158,67 +173,77 @@ export default function SchedulePage() {
                                     <div className="flex items-center justify-between">
                                         <CardTitle>カレンダー</CardTitle>
                                     </div>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:items-center">
-                                        <div className="flex flex-col sm:flex-row items-center gap-2">
-                                            <Select value={filterType} onValueChange={(v: any) => setFilterType(v)}>
-                                                <SelectTrigger className="w-full sm:w-32 md:w-40">
-                                                    <SelectValue placeholder="セッションタイプ" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="all">すべて</SelectItem>
-                                                    <SelectItem value="individual">個人セッション</SelectItem>
-                                                    <SelectItem value="group">グループセッション</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                            <Select value={filterStatus} onValueChange={(v: any) => setFilterStatus(v)}>
-                                                <SelectTrigger className="w-full sm:w-32 md:w-40">
-                                                    <SelectValue placeholder="ステータス" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="all">すべて</SelectItem>
-                                                    <SelectItem value="completed">完了</SelectItem>
-                                                    <SelectItem value="planned">予定</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                            <Select value={filterGroup} onValueChange={(v: any) => setFilterGroup(v)}>
-                                                <SelectTrigger className="w-full sm:w-32 md:w-40">
-                                                    <SelectValue placeholder="グループ" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="all">すべてのグループ</SelectItem>
-                                                    <SelectItem value="__none__">グループなし</SelectItem>
-                                                    {uniqueGroups.map((g) => (
-                                                        <SelectItem key={g} value={g}>{g}</SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
-
-                                        <div className="flex items-center gap-1 whitespace-nowrap md:justify-end">
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                onClick={() => setCurrentMonth(addMonths(currentMonth, -1))}
-                                            >
-                                                <ChevronLeft className="h-4 w-4" />
-                                            </Button>
-                                            <div className="min-w-[90px] text-center text-sm font-medium">
-                                                {monthTitle}
-                                            </div>
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
-                                            >
-                                                <ChevronRight className="h-4 w-4" />
-                                            </Button>
-                                            <Button variant="ghost" size="sm" onClick={() => setCurrentMonth(new Date())}>
-                                                今月
-                                            </Button>
-                                        </div>
-                                    </div>
                                 </CardHeader>
                                 <CardContent>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                                        <Select value={filterType} onValueChange={(v: any) => setFilterType(v)}>
+                                            <SelectTrigger className="w-full">
+                                                <SelectValue placeholder="セッションタイプ" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="all">すべて</SelectItem>
+                                                <SelectItem value="individual">個人セッション</SelectItem>
+                                                <SelectItem value="group">グループセッション</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                        <Select value={filterStatus} onValueChange={(v: any) => setFilterStatus(v)}>
+                                            <SelectTrigger className="w-full">
+                                                <SelectValue placeholder="ステータス" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="all">すべて</SelectItem>
+                                                <SelectItem value="completed">完了</SelectItem>
+                                                <SelectItem value="planned">予定</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                        <Select value={filterGroup} onValueChange={(v: any) => setFilterGroup(v)}>
+                                            <SelectTrigger className="w-full">
+                                                <SelectValue placeholder="グループ" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="all">すべてのグループ</SelectItem>
+                                                <SelectItem value="__none__">グループなし</SelectItem>
+                                                {uniqueGroups.map((g) => (
+                                                    <SelectItem key={g} value={g}>{g}</SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                        <Select value={filterClientId} onValueChange={(v: any) => setFilterClientId(v)}>
+                                            <SelectTrigger className="w-full">
+                                                <SelectValue placeholder="クライエント" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="all">すべてのクライエント</SelectItem>
+                                                {clientsSorted.map((c) => (
+                                                    <SelectItem key={c.id!} value={c.id!}>
+                                                        {c.name}{c.group ? ` (${c.group})` : ""}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div className="w-full flex items-center gap-1 justify-between sm:justify-end mt-2 mb-3">
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => setCurrentMonth(addMonths(currentMonth, -1))}
+                                        >
+                                            <ChevronLeft className="h-4 w-4" />
+                                        </Button>
+                                        <div className="min-w-[72px] sm:min-w-[90px] text-center text-sm font-medium">
+                                            {monthTitle}
+                                        </div>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
+                                        >
+                                            <ChevronRight className="h-4 w-4" />
+                                        </Button>
+                                        <Button variant="ghost" size="sm" onClick={() => setCurrentMonth(new Date())}>
+                                            今月
+                                        </Button>
+                                    </div>
                                     <div className="rounded-md overflow-hidden border border-gray-200">
                                         <div className="grid grid-cols-7 text-xs text-gray-600">
                                             {weekdayLabels.map((w, i) => (
@@ -355,19 +380,11 @@ export default function SchedulePage() {
                             <Card>
                                 <CardHeader>
                                     <CardTitle>セッション</CardTitle>
-                                    <div className="flex items-center space-x-2 flex-1">
-                                        <Search className="h-4 w-4 text-gray-400" />
-                                        <Input
-                                            placeholder="クライエント名で検索..."
-                                            value={searchTerm}
-                                            onChange={(e) => setSearchTerm(e.target.value)}
-                                        />
-                                    </div>
                                 </CardHeader>
                                 <CardContent>
-                                    <div className="flex flex-col sm:flex-row md:justify-end justify-between gap-4 mb-6">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
                                         <Select value={filterType} onValueChange={(v: any) => setFilterType(v)}>
-                                            <SelectTrigger className="w-full sm:w-48">
+                                            <SelectTrigger className="w-full">
                                                 <SelectValue placeholder="セッションタイプ" />
                                             </SelectTrigger>
                                             <SelectContent>
@@ -377,7 +394,7 @@ export default function SchedulePage() {
                                             </SelectContent>
                                         </Select>
                                         <Select value={filterStatus} onValueChange={(v: any) => setFilterStatus(v)}>
-                                            <SelectTrigger className="w-full sm:w-48">
+                                            <SelectTrigger className="w-full">
                                                 <SelectValue placeholder="ステータス" />
                                             </SelectTrigger>
                                             <SelectContent>
@@ -387,7 +404,7 @@ export default function SchedulePage() {
                                             </SelectContent>
                                         </Select>
                                         <Select value={filterGroup} onValueChange={(v: any) => setFilterGroup(v)}>
-                                            <SelectTrigger className="w-full sm:w-48">
+                                            <SelectTrigger className="w-full">
                                                 <SelectValue placeholder="グループ" />
                                             </SelectTrigger>
                                             <SelectContent>
@@ -398,7 +415,20 @@ export default function SchedulePage() {
                                                 ))}
                                             </SelectContent>
                                         </Select>
-                                        <div className="w-full sm:w-40">
+                                        <Select value={filterClientId} onValueChange={(v: any) => setFilterClientId(v)}>
+                                            <SelectTrigger className="w-full">
+                                                <SelectValue placeholder="クライエント" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="all">すべてのクライエント</SelectItem>
+                                                {clientsSorted.map((c) => (
+                                                    <SelectItem key={c.id!} value={c.id!}>
+                                                        {c.name}{c.group ? ` (${c.group})` : ""}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                        <div className="w-full">
                                             <Input
                                                 type="date"
                                                 value={selectedDateKey || ""}
