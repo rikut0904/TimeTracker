@@ -249,7 +249,7 @@ export default function SchedulePage() {
                         <TabsContent value="calendar">
                             <Card>
                                 <CardHeader className="space-y-3">
-                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                                         <CardTitle>カレンダー</CardTitle>
                                         <div className="md:hidden">
                                             <button
@@ -434,7 +434,7 @@ export default function SchedulePage() {
                         <TabsContent value="sessions">
                             <Card>
                                 <CardHeader>
-                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                                         <CardTitle>セッション</CardTitle>
                                         <div className="md:hidden">
                                             <button
