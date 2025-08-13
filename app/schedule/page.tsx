@@ -453,24 +453,18 @@ export default function SchedulePage() {
                                                                 />
                                                                 <span>インデックス済み</span>
                                                             </label>
-                                                            <Button
-                                                                size="sm"
-                                                                variant="ghost"
-                                                                onClick={() => {
-                                                                    setEditingMemoId(editingMemoId === s.id ? null : (s.id || null))
-                                                                }}
-                                                            >
-                                                                備考を{editingMemoId === s.id ? "閉じる" : "編集"}
-                                                            </Button>
+                                                            {/* 備考編集ボタンを削除（MemoSectionで直接編集） */}
                                                         </div>
-                                                        {(s.memo ?? "").trim() !== "" && (
-                                                            <div className="text-xs text-gray-500 mt-1 break-words">
-                                                                備考: {s.memo}
-                                                            </div>
-                                                        )}
-                                                        {editingMemoId === s.id && (
-                                                            <MemoSection sessionId={s.id!} userId={user?.uid} memo={s.memo} className="mt-2" />
-                                                        )}
+                                                        <MemoSection
+                                                            sessionId={s.id!}
+                                                            userId={user?.uid}
+                                                            memo={s.memo}
+                                                            className="mt-2 w-full"
+                                                            forceEdit={editingMemoId === s.id}
+                                                            hideMenu={editingMemoId === s.id}
+                                                            hidePreview={false}
+                                                            onClose={() => setEditingMemoId(null)}
+                                                        />
                                                     </div>
                                                 ))
                                         )}
@@ -660,7 +654,7 @@ export default function SchedulePage() {
                                                                     day: "numeric",
                                                                 })}
                                                             </div>
-                                                            {s.memo && (
+                                                            {s.memo && editingMemoId !== s.id && (
                                                                 <div className="text-xs text-gray-500 mt-1 break-words">
                                                                     備考: {s.memo}
                                                                 </div>
@@ -684,11 +678,7 @@ export default function SchedulePage() {
                                                                 </Button>
                                                             </DropdownMenuTrigger>
                                                             <DropdownMenuContent align="end">
-                                                                <DropdownMenuItem
-                                                                    onClick={() => {
-                                                                        setEditingMemoId(editingMemoId === s.id ? null : (s.id || null))
-                                                                    }}
-                                                                >
+                                                                <DropdownMenuItem onClick={() => setEditingMemoId(editingMemoId === s.id ? null : (s.id || null))}>
                                                                     {editingMemoId === s.id ? "備考編集を閉じる" : "備考を編集"}
                                                                 </DropdownMenuItem>
                                                             </DropdownMenuContent>
@@ -696,7 +686,16 @@ export default function SchedulePage() {
                                                     </div>
                                                     </div>
                                                 {editingMemoId === s.id && (
-                                                    <MemoSection sessionId={s.id!} userId={user?.uid} memo={s.memo} className="mt-2" />
+                                                    <MemoSection
+                                                        sessionId={s.id!}
+                                                        userId={user?.uid}
+                                                        memo={s.memo}
+                                                        className="mt-2"
+                                                        forceEdit
+                                                        hideMenu
+                                                        hidePreview
+                                                        onClose={() => setEditingMemoId(null)}
+                                                    />
                                                 )}
                                                 </div>
                                             ))

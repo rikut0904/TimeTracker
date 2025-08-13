@@ -304,13 +304,22 @@ export default function Reports() {
                         </DropdownMenu>
                       </div>
                     </div>
-                    {(session.memo ?? "").trim() !== "" && (
+                    {(session.memo ?? "").trim() !== "" && editingMemoId !== session.id && (
                       <div className="text-xs text-gray-500 mt-1 break-words">
                         備考: {session.memo}
                       </div>
                     )}
                     {editingMemoId === session.id && (
-                      <MemoSection sessionId={session.id!} userId={user?.uid} memo={session.memo} className="mt-2" />
+                      <MemoSection
+                        sessionId={session.id!}
+                        userId={user?.uid}
+                        memo={session.memo}
+                        className="mt-2"
+                        forceEdit
+                        hideMenu
+                        hidePreview
+                        onClose={() => setEditingMemoId(null)}
+                      />
                     )}
                   </li>
                 ))}
