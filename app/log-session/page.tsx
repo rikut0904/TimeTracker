@@ -34,6 +34,7 @@ export default function LogSession() {
     const [selectedClient, setSelectedClient] = useState("")
     const [duration, setDuration] = useState<number | null>(null)
     const [customDuration, setCustomDuration] = useState("")
+    const [indexed, setIndexed] = useState<boolean>(false)
 
     // 日付選択用の状態を更新（完了セッションでもデフォルト値を設定）
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0])
@@ -84,6 +85,7 @@ export default function LogSession() {
                 duration: finalDuration,
                 date: sessionDate,
                 status: sessionMode,
+                indexed,
             })
 
             const message = sessionMode === "planned" ? "予定セッションが登録されました！" : "セッションが記録されました！"
@@ -234,6 +236,19 @@ export default function LogSession() {
                                         ? "完了したセッションの実施日を選択してください"
                                         : "予定セッションの実施予定日を選択してください"}
                                 </p>
+                            </div>
+
+                            {/* Indexed flag */}
+                            <div className="flex items-center gap-3">
+                                <input
+                                    id="indexed"
+                                    type="checkbox"
+                                    className="accent-blue-600 w-6 h-6"
+                                    checked={indexed}
+                                    onChange={(e) => setIndexed(e.target.checked)}
+                                    aria-label="インデックス済みとして記録"
+                                />
+                                <Label htmlFor="indexed" className="text-sm sm:text-base">インデックス済みとして記録</Label>
                             </div>
 
                             {/* Submit Button のテキストを更新 */}

@@ -153,7 +153,6 @@ export default function Dashboard() {
                                                     )}
                                                 </div>
                                                 <div className="text-right">
-                                                    <div className="text-sm font-medium">{session.duration}分</div>
                                                     <div className="text-xs text-muted-foreground">
                                                         {session.date.toLocaleDateString("ja-JP")}
                                                     </div>

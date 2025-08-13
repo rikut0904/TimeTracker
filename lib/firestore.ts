@@ -24,6 +24,7 @@ export interface Session {
   duration: number
   date: Date
   status: "planned" | "completed"
+  indexed?: boolean
 }
 
 export interface Client {

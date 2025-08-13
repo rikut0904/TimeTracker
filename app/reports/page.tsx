@@ -8,6 +8,7 @@ import ProtectedRoute from "@/components/ProtectedRoute"
 import { useAuth } from "@/contexts/AuthContext"
 import AppHeader from "@/components/AppHeader"
 import { Button } from "@/components/ui/button"
+import { updateSession } from "@/lib/firestore"
 import { useUserSessions } from "@/hooks/useUserSessions"
 import {
   Dialog,
@@ -27,7 +28,7 @@ interface Client {
 }
 
 export default function Reports() {
-  const { userProfile } = useAuth()
+  const { userProfile, user } = useAuth() as any
   const sessions = useUserSessions()
   const [selectedInfo, setSelectedInfo] = useState<{ clientId: string; clientName: string; type: 'individual' | 'group' } | null>(null)
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
@@ -35,6 +36,16 @@ export default function Reports() {
   const handleViewDetails = (clientId: string, clientName: string, type: 'individual' | 'group') => {
     setSelectedInfo({ clientId, clientName, type })
     setIsDetailModalOpen(true)
+  }
+
+  const handleToggleIndexed = async (sessionId: string, current: boolean | undefined) => {
+    if (!user?.uid) return
+    try {
+      await updateSession(user.uid, sessionId, { indexed: !current })
+    } catch (e) {
+      console.error("failed to update indexed", e)
+      alert("インデックス状態の更新に失敗しました")
+    }
   }
 
   const clientSessions = selectedInfo
@@ -258,8 +269,18 @@ export default function Reports() {
               <ul className="space-y-2">
                 {clientSessions.map((session) => (
                   <li key={session.id} className="flex justify-between items-center p-2 bg-gray-100 rounded">
-                    <span className="text-sm">{session.date.toLocaleDateString("ja-JP")}</span>
-                    <span className="text-sm font-medium">{session.duration}分</span>
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm">{session.date.toLocaleDateString("ja-JP")}</span>
+                    </div>
+                    <label className="inline-flex items-center gap-2 text-xs sm:text-sm cursor-pointer">
+                      <input
+                        type="checkbox"
+                        className="accent-blue-600 w-6 h-6"
+                        checked={!!session.indexed}
+                        onChange={() => handleToggleIndexed(session.id!, session.indexed)}
+                      />
+                      <span>インデックス済み</span>
+                    </label>
                   </li>
                 ))}
               </ul>
