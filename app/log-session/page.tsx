@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { ArrowLeft } from "lucide-react"
 import Link from "next/link"
@@ -35,6 +36,7 @@ export default function LogSession() {
     const [duration, setDuration] = useState<number | null>(null)
     const [customDuration, setCustomDuration] = useState("")
     const [indexed, setIndexed] = useState<boolean>(false)
+    const [memo, setMemo] = useState("")
 
     // 日付選択用の状態を更新（完了セッションでもデフォルト値を設定）
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0])
@@ -86,6 +88,7 @@ export default function LogSession() {
                 date: sessionDate,
                 status: sessionMode,
                 indexed,
+                memo: memo.trim() ? memo.trim() : undefined,
             })
 
             const message = sessionMode === "planned" ? "予定セッションが登録されました！" : "セッションが記録されました！"
@@ -249,6 +252,12 @@ export default function LogSession() {
                                     aria-label="インデックス済みとして記録"
                                 />
                                 <Label htmlFor="indexed" className="text-sm sm:text-base">インデックス済みとして記録</Label>
+                            </div>
+
+                            {/* Memo */}
+                            <div className="space-y-2">
+                                <Label htmlFor="memo">備考</Label>
+                                <Textarea id="memo" placeholder="メモ・備考を入力" value={memo} onChange={(e) => setMemo(e.target.value)} className="min-h-[96px]" />
                             </div>
 
                             {/* Submit Button のテキストを更新 */}

@@ -3,11 +3,13 @@
 import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
-import { User, Users, TrendingUp } from "lucide-react"
+import { User, Users, TrendingUp, MoreHorizontal } from "lucide-react"
 import ProtectedRoute from "@/components/ProtectedRoute"
 import { useAuth } from "@/contexts/AuthContext"
 import AppHeader from "@/components/AppHeader"
 import { Button } from "@/components/ui/button"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import MemoSection from "@/components/session/MemoSection"
 import { updateSession } from "@/lib/firestore"
 import { useUserSessions } from "@/hooks/useUserSessions"
 import {
@@ -32,6 +34,7 @@ export default function Reports() {
   const sessions = useUserSessions()
   const [selectedInfo, setSelectedInfo] = useState<{ clientId: string; clientName: string; type: 'individual' | 'group' } | null>(null)
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
+  const [editingMemoId, setEditingMemoId] = useState<string | null>(null)
 
   const handleViewDetails = (clientId: string, clientName: string, type: 'individual' | 'group') => {
     setSelectedInfo({ clientId, clientName, type })
@@ -47,6 +50,8 @@ export default function Reports() {
       alert("インデックス状態の更新に失敗しました")
     }
   }
+
+  const handleSaveMemo = async (_sessionId: string, _currentText: string) => {}
 
   const clientSessions = selectedInfo
     ? sessions.filter(
@@ -268,19 +273,45 @@ export default function Reports() {
             {clientSessions.length > 0 ? (
               <ul className="space-y-2">
                 {clientSessions.map((session) => (
-                  <li key={session.id} className="flex justify-between items-center p-2 bg-gray-100 rounded">
-                    <div className="flex items-center gap-3">
+                  <li key={session.id} className="p-2 bg-gray-100 rounded">
+                    <div className="flex items-center justify-between gap-3">
                       <span className="text-sm">{session.date.toLocaleDateString("ja-JP")}</span>
+                      <div className="flex items-center gap-1">
+                        <label className="inline-flex items-center gap-2 text-xs sm:text-sm cursor-pointer mr-2">
+                          <input
+                            type="checkbox"
+                            className="accent-blue-600 w-6 h-6"
+                            checked={!!session.indexed}
+                            onChange={() => handleToggleIndexed(session.id!, session.indexed)}
+                          />
+                          <span>インデックス済み</span>
+                        </label>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button size="icon" variant="ghost" aria-label="その他の操作">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setEditingMemoId(editingMemoId === session.id ? null : (session.id || null))
+                              }}
+                            >
+                              {editingMemoId === session.id ? "備考編集を閉じる" : "備考を編集"}
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
                     </div>
-                    <label className="inline-flex items-center gap-2 text-xs sm:text-sm cursor-pointer">
-                      <input
-                        type="checkbox"
-                        className="accent-blue-600 w-6 h-6"
-                        checked={!!session.indexed}
-                        onChange={() => handleToggleIndexed(session.id!, session.indexed)}
-                      />
-                      <span>インデックス済み</span>
-                    </label>
+                    {(session.memo ?? "").trim() !== "" && (
+                      <div className="text-xs text-gray-500 mt-1 break-words">
+                        備考: {session.memo}
+                      </div>
+                    )}
+                    {editingMemoId === session.id && (
+                      <MemoSection sessionId={session.id!} userId={user?.uid} memo={session.memo} className="mt-2" />
+                    )}
                   </li>
                 ))}
               </ul>

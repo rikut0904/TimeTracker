@@ -25,6 +25,7 @@ export interface Session {
   date: Date
   status: "planned" | "completed"
   indexed?: boolean
+  memo?: string
 }
 
 export interface Client {

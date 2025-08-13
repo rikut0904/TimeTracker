@@ -14,7 +14,9 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { ChevronLeft, ChevronRight, Search, Users, User, SlidersHorizontal } from "lucide-react"
+import { ChevronLeft, ChevronRight, Search, Users, User, SlidersHorizontal, MoreHorizontal } from "lucide-react"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import MemoSection from "@/components/session/MemoSection"
 import { useResponsive } from "@/hooks/useResponsive"
 import { useAuth } from "@/contexts/AuthContext"
 
@@ -61,6 +63,7 @@ export default function SchedulePage() {
     const [filterClientId, setFilterClientId] = useState<string>("all")
     const [showCalendarFilters, setShowCalendarFilters] = useState<boolean>(false)
     const [showSessionsFilters, setShowSessionsFilters] = useState<boolean>(false)
+    const [editingMemoId, setEditingMemoId] = useState<string | null>(null)
 
     const uniqueGroups = useMemo(() => {
         return Array.from(new Set((clients || []).map((c) => c.group).filter(Boolean))) as string[]
@@ -255,6 +258,8 @@ export default function SchedulePage() {
         }
     }
 
+    const handleSaveMemo = async (_session: Session) => {}
+
     return (
         <ProtectedRoute>
             <div className="min-h-screen bg-gray-50">
@@ -448,7 +453,24 @@ export default function SchedulePage() {
                                                                 />
                                                                 <span>インデックス済み</span>
                                                             </label>
+                                                            <Button
+                                                                size="sm"
+                                                                variant="ghost"
+                                                                onClick={() => {
+                                                                    setEditingMemoId(editingMemoId === s.id ? null : (s.id || null))
+                                                                }}
+                                                            >
+                                                                備考を{editingMemoId === s.id ? "閉じる" : "編集"}
+                                                            </Button>
                                                         </div>
+                                                        {(s.memo ?? "").trim() !== "" && (
+                                                            <div className="text-xs text-gray-500 mt-1 break-words">
+                                                                備考: {s.memo}
+                                                            </div>
+                                                        )}
+                                                        {editingMemoId === s.id && (
+                                                            <MemoSection sessionId={s.id!} userId={user?.uid} memo={s.memo} className="mt-2" />
+                                                        )}
                                                     </div>
                                                 ))
                                         )}
@@ -604,11 +626,11 @@ export default function SchedulePage() {
                                             <div className="text-center py-6 text-gray-500">条件に一致するセッションが見つかりません</div>
                                         ) : (
                                             sessionsFiltered.map((s) => (
-                                                <div
-                                                    key={s.id}
-                                                    className={`flex items-center justify-between p-3 border rounded-lg ${s.status === "planned" ? "bg-blue-50 border-blue-200" : "bg-white"
-                                                        }`}
-                                                >
+                                                <div key={s.id} className="space-y-2">
+                                                    <div
+                                                        className={`flex items-center justify-between p-3 border rounded-lg ${s.status === "planned" ? "bg-blue-50 border-blue-200" : "bg-white"
+                                                            }`}
+                                                    >
                                                     <div className="flex items-center gap-3">
                                                         <div className="flex-shrink-0">
                                                             {s.type === "individual" ? (
@@ -638,17 +660,44 @@ export default function SchedulePage() {
                                                                     day: "numeric",
                                                                 })}
                                                             </div>
+                                                            {s.memo && (
+                                                                <div className="text-xs text-gray-500 mt-1 break-words">
+                                                                    備考: {s.memo}
+                                                                </div>
+                                                            )}
                                                         </div>
                                                     </div>
-                                                    <label className="inline-flex items-center gap-2 text-xs sm:text-sm cursor-pointer">
-                                                        <input
-                                                            type="checkbox"
-                                                            className="accent-blue-600 w-6 h-6"
-                                                            checked={!!s.indexed}
-                                                            onChange={() => handleToggleIndexed(s)}
-                                                        />
-                                                        <span>インデックス済み</span>
-                                                    </label>
+                                                    <div className="flex items-center gap-1">
+                                                        <label className="inline-flex items-center gap-2 text-xs sm:text-sm cursor-pointer mr-2">
+                                                            <input
+                                                                type="checkbox"
+                                                                className="accent-blue-600 w-6 h-6"
+                                                                checked={!!s.indexed}
+                                                                onChange={() => handleToggleIndexed(s)}
+                                                            />
+                                                            <span>インデックス済み</span>
+                                                        </label>
+                                                        <DropdownMenu>
+                                                            <DropdownMenuTrigger asChild>
+                                                                <Button size="icon" variant="ghost" aria-label="その他の操作">
+                                                                    <MoreHorizontal className="h-4 w-4" />
+                                                                </Button>
+                                                            </DropdownMenuTrigger>
+                                                            <DropdownMenuContent align="end">
+                                                                <DropdownMenuItem
+                                                                    onClick={() => {
+                                                                        setEditingMemoId(editingMemoId === s.id ? null : (s.id || null))
+                                                                    }}
+                                                                >
+                                                                    {editingMemoId === s.id ? "備考編集を閉じる" : "備考を編集"}
+                                                                </DropdownMenuItem>
+                                                            </DropdownMenuContent>
+                                                        </DropdownMenu>
+                                                    </div>
+                                                    </div>
+                                                {editingMemoId === s.id && (
+                                                    <MemoSection sessionId={s.id!} userId={user?.uid} memo={s.memo} className="mt-2" />
+                                                )}
                                                 </div>
                                             ))
                                         )}
