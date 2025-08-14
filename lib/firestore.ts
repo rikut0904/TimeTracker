@@ -24,6 +24,8 @@ export interface Session {
   duration: number
   date: Date
   status: "planned" | "completed"
+  indexed?: boolean
+  memo?: string
 }
 
 export interface Client {
@@ -34,19 +36,29 @@ export interface Client {
 
 // セッション関連の操作
 export const addSession = async (userId: string, sessionData: Omit<Session, "id">) => {
-  const docRef = await addDoc(collection(db, "users", userId, "sessions"), {
+  // Build data object and remove undefined fields to satisfy Firestore constraints
+  const data: Record<string, any> = {
     ...sessionData,
     date: Timestamp.fromDate(sessionData.date),
+  }
+  Object.keys(data).forEach((key) => {
+    if (data[key] === undefined) delete data[key]
   })
+
+  const docRef = await addDoc(collection(db, "users", userId, "sessions"), data)
   return docRef.id
 }
 
 export const updateSession = async (userId: string, sessionId: string, updates: Partial<Session>) => {
   const sessionRef = doc(db, "users", userId, "sessions", sessionId)
-  const updateData = { ...updates }
+  const updateData: Record<string, any> = { ...updates }
   if (updates.date) {
     updateData.date = Timestamp.fromDate(updates.date) as any
   }
+  // Remove undefined fields to avoid Firestore errors
+  Object.keys(updateData).forEach((key) => {
+    if (updateData[key] === undefined) delete updateData[key]
+  })
   await updateDoc(sessionRef, updateData)
 }
 

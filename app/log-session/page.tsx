@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { ArrowLeft } from "lucide-react"
 import Link from "next/link"
@@ -34,6 +35,8 @@ export default function LogSession() {
     const [selectedClient, setSelectedClient] = useState("")
     const [duration, setDuration] = useState<number | null>(null)
     const [customDuration, setCustomDuration] = useState("")
+    const [indexed, setIndexed] = useState<boolean>(false)
+    const [memo, setMemo] = useState("")
 
     // 日付選択用の状態を更新（完了セッションでもデフォルト値を設定）
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0])
@@ -47,13 +50,14 @@ export default function LogSession() {
             return
         }
 
-        if (!selectedClient || (!duration && !customDuration)) {
+        if (!selectedClient || (duration === null && customDuration.trim() === "")) {
             alert("セッションタイプ、クライエント、時間を選択してください")
             return
         }
 
-        const finalDuration = duration || Number.parseInt(customDuration)
-        if (!finalDuration || finalDuration <= 0) {
+        const parsedCustom = customDuration.trim() === "" ? null : Number.parseInt(customDuration)
+        const finalDuration = duration !== null ? duration : (parsedCustom as number | null)
+        if (finalDuration === null || Number.isNaN(finalDuration) || finalDuration < 0) {
             alert("有効な時間を入力してください")
             return
         }
@@ -84,14 +88,31 @@ export default function LogSession() {
                 duration: finalDuration,
                 date: sessionDate,
                 status: sessionMode,
+                indexed,
+                memo: memo.trim() ? memo.trim() : undefined,
             })
 
             const message = sessionMode === "planned" ? "予定セッションが登録されました！" : "セッションが記録されました！"
             alert(message)
-            router.push("/")
+            const redirect = searchParams.get("redirect") || "/"
+            router.push(redirect)
         } catch (error) {
             console.error("セッションの追加に失敗しました:", error)
             alert("セッションの追加に失敗しました。")
+        }
+    }
+
+    const handleBack = () => {
+        const redirect = searchParams.get("redirect")
+        if (redirect) {
+            router.push(redirect)
+        } else {
+            // Try to go back; if no history, fallback to home
+            if (typeof window !== "undefined" && window.history.length > 1) {
+                router.back()
+            } else {
+                router.push("/")
+            }
         }
     }
 
@@ -102,10 +123,10 @@ export default function LogSession() {
 
                 <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                     <div className="mb-6">
-                        <Link href="/" className="inline-flex items-center text-blue-600 hover:text-blue-800">
+                        <button type="button" onClick={handleBack} className="inline-flex items-center text-blue-600 hover:text-blue-800">
                             <ArrowLeft className="mr-2 h-4 w-4" />
-                            ダッシュボードに戻る
-                        </Link>
+                            前のページに戻る
+                        </button>
                     </div>
 
                     <Card>
@@ -234,6 +255,25 @@ export default function LogSession() {
                                         ? "完了したセッションの実施日を選択してください"
                                         : "予定セッションの実施予定日を選択してください"}
                                 </p>
+                            </div>
+
+                            {/* Indexed flag */}
+                            <div className="flex items-center gap-3">
+                                <input
+                                    id="indexed"
+                                    type="checkbox"
+                                    className="accent-blue-600 w-6 h-6"
+                                    checked={indexed}
+                                    onChange={(e) => setIndexed(e.target.checked)}
+                                    aria-label="インデックス済みとして記録"
+                                />
+                                <Label htmlFor="indexed" className="text-sm sm:text-base">インデックス済みとして記録</Label>
+                            </div>
+
+                            {/* Memo */}
+                            <div className="space-y-2">
+                                <Label htmlFor="memo">備考</Label>
+                                <Textarea id="memo" placeholder="メモ・備考を入力" value={memo} onChange={(e) => setMemo(e.target.value)} className="min-h-[96px]" />
                             </div>
 
                             {/* Submit Button のテキストを更新 */}

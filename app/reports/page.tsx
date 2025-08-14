@@ -3,12 +3,17 @@
 import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
-import { User, Users, TrendingUp } from "lucide-react"
+import { User, Users, TrendingUp, MoreHorizontal } from "lucide-react"
 import ProtectedRoute from "@/components/ProtectedRoute"
 import { useAuth } from "@/contexts/AuthContext"
 import AppHeader from "@/components/AppHeader"
 import { Button } from "@/components/ui/button"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+// import MemoSection from "@/components/session/MemoSection"
+import { updateSession } from "@/lib/firestore"
+import EditSessionDialog from "@/components/session/EditSessionDialog"
 import { useUserSessions } from "@/hooks/useUserSessions"
+import { useUserClients } from "@/hooks/useUserClients"
 import {
   Dialog,
   DialogContent,
@@ -27,24 +32,73 @@ interface Client {
 }
 
 export default function Reports() {
-  const { userProfile } = useAuth()
+  const { userProfile, user } = useAuth() as any
   const sessions = useUserSessions()
+  const clients = useUserClients()
   const [selectedInfo, setSelectedInfo] = useState<{ clientId: string; clientName: string; type: 'individual' | 'group' } | null>(null)
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
+  const [editingMemoId, setEditingMemoId] = useState<string | null>(null)
+  const [editDialogOpen, setEditDialogOpen] = useState(false)
+  const [targetSessionForEdit, setTargetSessionForEdit] = useState<any>(null)
 
   const handleViewDetails = (clientId: string, clientName: string, type: 'individual' | 'group') => {
     setSelectedInfo({ clientId, clientName, type })
     setIsDetailModalOpen(true)
   }
 
+  const handleToggleIndexed = async (sessionId: string, current: boolean | undefined) => {
+    if (!user?.uid) return
+    try {
+      await updateSession(user.uid, sessionId, { indexed: !current })
+    } catch (e) {
+      console.error("failed to update indexed", e)
+      alert("インデックス状態の更新に失敗しました")
+    }
+  }
+
+  const handleMarkCompleted = async (sessionId: string) => {
+    if (!user?.uid) return
+    try {
+      await updateSession(user.uid, sessionId, { status: 'completed' })
+    } catch (e) {
+      console.error('failed to mark completed', e)
+      alert('完了への変更に失敗しました')
+    }
+  }
+
+  const handleSaveMemo = async (_sessionId: string, _currentText: string) => { }
+
   const clientSessions = selectedInfo
     ? sessions.filter(
       (s) =>
         s.clientId === selectedInfo.clientId &&
         s.type === selectedInfo.type &&
-        s.status === "completed",
+        s.status === "completed" &&
+        s.duration > 0,
     )
     : []
+
+  // 詳細モーダル用のサマリー（A/B と インデックス済み数）
+  const clientSessionsNonZeroForSummary = selectedInfo
+    ? sessions.filter(
+      (s) =>
+        s.clientId === selectedInfo.clientId &&
+        s.type === selectedInfo.type &&
+        s.status === "completed" &&
+        (s.duration ?? 0) > 0,
+    )
+    : []
+  const detailDoneCount = clientSessionsNonZeroForSummary.length
+  const detailRestCount = selectedInfo
+    ? sessions.filter(
+      (s) =>
+        s.clientId === selectedInfo.clientId &&
+        s.type === selectedInfo.type &&
+        s.status === "completed" &&
+        (s.duration ?? 0) === 0,
+    ).length
+    : 0
+  const detailIndexedCount = clientSessionsNonZeroForSummary.filter((s) => !!s.indexed).length
 
   // 完了したセッションのみで時間を計算
   const individualHours =
@@ -57,6 +111,10 @@ export default function Reports() {
     60
 
   const totalHours = individualHours + groupHours
+  // 全体のインデックス済み件数（完了かつ0分除外）
+  const allCompletedNonZero = sessions.filter((s) => s.status === "completed" && (s.duration ?? 0) > 0)
+  const indexedCompletedCount = allCompletedNonZero.filter((s) => !!s.indexed).length
+
 
   // 予定セッションの時間も計算
   const plannedIndividualHours =
@@ -78,13 +136,22 @@ export default function Reports() {
             clientName: session.clientName,
             totalHours: 0,
             sessionCount: 0,
+            doneCount: 0,
+            notDoneCount: 0,
+            indexedNonZeroCount: 0,
           }
         }
         acc[session.clientId].totalHours += session.duration / 60
         acc[session.clientId].sessionCount += 1
+        if (session.duration > 0) {
+          acc[session.clientId].doneCount += 1
+          if (session.indexed) acc[session.clientId].indexedNonZeroCount += 1
+        } else {
+          acc[session.clientId].notDoneCount += 1
+        }
         return acc
       },
-      {} as Record<string, { clientName: string; totalHours: number; sessionCount: number }>,
+      {} as Record<string, { clientName: string; totalHours: number; sessionCount: number; doneCount: number; notDoneCount: number; indexedNonZeroCount: number }>,
     )
 
   // グループセッション統計
@@ -97,13 +164,22 @@ export default function Reports() {
             clientName: session.clientName,
             totalHours: 0,
             sessionCount: 0,
+            doneCount: 0,
+            notDoneCount: 0,
+            indexedNonZeroCount: 0,
           }
         }
         acc[session.clientId].totalHours += session.duration / 60
         acc[session.clientId].sessionCount += 1
+        if (session.duration > 0) {
+          acc[session.clientId].doneCount += 1
+          if (session.indexed) acc[session.clientId].indexedNonZeroCount += 1
+        } else {
+          acc[session.clientId].notDoneCount += 1
+        }
         return acc
       },
-      {} as Record<string, { clientName: string; totalHours: number; sessionCount: number }>,
+      {} as Record<string, { clientName: string; totalHours: number; sessionCount: number; doneCount: number; notDoneCount: number; indexedNonZeroCount: number }>,
     )
 
   return (
@@ -112,9 +188,14 @@ export default function Reports() {
         <AppHeader />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="mb-8">
+          <div className="mb-2">
             <h2 className="text-2xl font-bold text-gray-900 mb-2">時間数サマリー</h2>
             <p className="text-gray-600">実習時間の詳細レポートです</p>
+          </div>
+          <div className="mb-6 text-xs text-gray-600 flex items-center gap-3">
+            <span>実施/休み: {allCompletedNonZero.length}/{sessions.filter((s) => s.status === "completed" && (s.duration ?? 0) === 0).length}</span>
+            <span className="inline-block w-1 h-1 rounded-full bg-gray-300" />
+            <span>インデックス済み: {indexedCompletedCount}/{allCompletedNonZero.length}</span>
           </div>
 
           {/* Overall Progress */}
@@ -183,9 +264,10 @@ export default function Reports() {
                       <div key={clientId} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                         <div className="flex items-center space-x-3">
                           <User className="h-5 w-5 text-blue-600" />
-                          <div>
-                            <div className="font-medium">{data.clientName}</div>
-                            <div className="text-sm text-muted-foreground">{data.sessionCount}回のセッション</div>
+                          <div className="font-medium">{data.clientName}</div>
+                          <div className="mb-2 text-[9px] sm:text-sm text-gray-600 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                            <span>実施/休み: {data.doneCount}/{data.notDoneCount}</span>
+                            <span>インデックス済み: {data.indexedNonZeroCount}/{data.doneCount}</span>
                           </div>
                         </div>
                         <div className="text-right">
@@ -226,9 +308,10 @@ export default function Reports() {
                       <div key={clientId} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                         <div className="flex items-center space-x-3">
                           <Users className="h-5 w-5 text-green-600" />
-                          <div>
-                            <div className="font-medium">{data.clientName}</div>
-                            <div className="text-sm text-muted-foreground">{data.sessionCount}回のセッション</div>
+                          <div className="font-medium">{data.clientName}</div>
+                          <div className="mb-2 text-[9px] sm:text-sm text-gray-600 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                            <span>実施/休み: {data.doneCount}/{data.notDoneCount}</span>
+                            <span>インデックス済み: {data.indexedNonZeroCount}/{data.doneCount}</span>
                           </div>
                         </div>
                         <div className="text-right">
@@ -246,7 +329,7 @@ export default function Reports() {
         </div>
       </div>
       <Dialog open={isDetailModalOpen} onOpenChange={setIsDetailModalOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="w-[95vw] sm:max-w-[560px]">
           <DialogHeader>
             <DialogTitle>{selectedInfo?.clientName}さんのセッション詳細</DialogTitle>
             <DialogDescription>
@@ -254,12 +337,50 @@ export default function Reports() {
             </DialogDescription>
           </DialogHeader>
           <div className="max-h-96 overflow-y-auto py-4">
+            <div className="mb-2 text-[11px] sm:text-xs text-gray-600 flex items-center gap-3">
+              <span>実施/休み: {detailDoneCount}/{detailRestCount}</span>
+              <span className="inline-block w-1 h-1 rounded-full bg-gray-300" />
+              <span>インデックス済み: {detailIndexedCount}/{clientSessionsNonZeroForSummary.length}</span>
+            </div>
             {clientSessions.length > 0 ? (
               <ul className="space-y-2">
-                {clientSessions.map((session) => (
-                  <li key={session.id} className="flex justify-between items-center p-2 bg-gray-100 rounded">
-                    <span className="text-sm">{session.date.toLocaleDateString("ja-JP")}</span>
-                    <span className="text-sm font-medium">{session.duration}分</span>
+                {clientSessions.map((session, idx) => (
+                  <li key={session.id} className="p-2 bg-white border rounded">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                      <div className="flex items-center gap-2 min-w-0 flex-1">
+                        <span className="inline-flex items-center justify-center rounded bg-white border px-1.5 py-0.5 text-gray-700 text-[11px] sm:text-xs">{idx + 1}</span>
+                        <span className="truncate">{session.date.toLocaleDateString("ja-JP")}</span>
+                        <span className="inline-block w-1 h-1 rounded-full bg-gray-300" />
+                        <span className="text-xs text-gray-600">{session.duration}分</span>
+                      </div>
+                      <div className="flex items-center gap-2 w-full sm:w-auto justify-start sm:justify-end mt-2 sm:mt-0">
+                        {session.status === 'planned' && (
+                          <Button size="sm" variant="secondary" onClick={() => handleMarkCompleted(session.id!)}>完了にする</Button>
+                        )}
+                        <label className="inline-flex items-center gap-2 cursor-pointer mr-2 whitespace-nowrap">
+                          <input
+                            type="checkbox"
+                            className="accent-blue-600 w-5 h-5 sm:w-6 sm:h-6"
+                            checked={!!session.indexed}
+                            onChange={() => handleToggleIndexed(session.id!, session.indexed)}
+                          />
+                          <span>インデックス済み</span>
+                        </label>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button size="icon" variant="ghost" aria-label="その他の操作">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => { setTargetSessionForEdit(session as any); setEditDialogOpen(true) }}>セッションを編集</DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </div>
+                    {(session.memo ?? "").trim() !== "" && (
+                      <div className="text-xs text-gray-500 mt-2 break-words whitespace-pre-wrap w-full">備考: {session.memo}</div>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -274,6 +395,7 @@ export default function Reports() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <EditSessionDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} session={targetSessionForEdit} userId={user?.uid} clients={clients || []} />
     </ProtectedRoute>
   )
 }
