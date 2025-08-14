@@ -286,10 +286,11 @@ export default function Reports() {
           <div className="max-h-96 overflow-y-auto py-4">
             {clientSessions.length > 0 ? (
               <ul className="space-y-2">
-                {clientSessions.map((session) => (
+                {clientSessions.map((session, idx) => (
                   <li key={session.id} className="p-2 bg-gray-100 rounded">
                     <div className="flex items-center justify-between gap-3">
                       <div className="flex items-center gap-2">
+                        <span className="text-xs inline-flex items-center justify-center rounded bg-white border px-1.5 py-0.5 text-gray-700">{idx + 1}</span>
                         <span className="text-sm">{session.date.toLocaleDateString("ja-JP")}</span>
                         <span className="inline-block w-1 h-1 rounded-full bg-gray-300" />
                         <span className="text-xs text-gray-600">{session.duration}分</span>

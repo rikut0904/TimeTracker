@@ -626,12 +626,13 @@ export default function SchedulePage() {
                                         {sessionsFiltered.length === 0 ? (
                                             <div className="text-center py-6 text-gray-500">条件に一致するセッションが見つかりません</div>
                                         ) : (
-                                            sessionsFiltered.map((s) => (
+                                            sessionsFiltered.map((s, idx) => (
                                                 <div key={s.id} className="space-y-2">
                                                     <div
                                                         className={`p-3 border rounded-lg flex flex-col sm:flex-row sm:flex-wrap sm:items-center sm:justify-between ${s.status === "planned" ? "bg-blue-50 border-blue-200" : "bg-white"}`}
                                                     >
                                                     <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap">
+                                                        <span className="text-xs inline-flex items-center justify-center rounded bg-white border px-1.5 py-0.5 text-gray-700 flex-shrink-0">{idx + 1}</span>
                                                         <div className="flex-shrink-0">
                                                             {s.type === "individual" ? (
                                                                 <div className="p-2 bg-blue-100 rounded-full">
