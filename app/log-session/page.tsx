@@ -94,10 +94,25 @@ export default function LogSession() {
 
             const message = sessionMode === "planned" ? "予定セッションが登録されました！" : "セッションが記録されました！"
             alert(message)
-            router.push("/")
+            const redirect = searchParams.get("redirect") || "/"
+            router.push(redirect)
         } catch (error) {
             console.error("セッションの追加に失敗しました:", error)
             alert("セッションの追加に失敗しました。")
+        }
+    }
+
+    const handleBack = () => {
+        const redirect = searchParams.get("redirect")
+        if (redirect) {
+            router.push(redirect)
+        } else {
+            // Try to go back; if no history, fallback to home
+            if (typeof window !== "undefined" && window.history.length > 1) {
+                router.back()
+            } else {
+                router.push("/")
+            }
         }
     }
 
@@ -108,10 +123,10 @@ export default function LogSession() {
 
                 <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                     <div className="mb-6">
-                        <Link href="/" className="inline-flex items-center text-blue-600 hover:text-blue-800">
+                        <button type="button" onClick={handleBack} className="inline-flex items-center text-blue-600 hover:text-blue-800">
                             <ArrowLeft className="mr-2 h-4 w-4" />
-                            ダッシュボードに戻る
-                        </Link>
+                            前のページに戻る
+                        </button>
                     </div>
 
                     <Card>

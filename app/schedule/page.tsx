@@ -14,12 +14,13 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { ChevronLeft, ChevronRight, Search, Users, User, SlidersHorizontal, MoreHorizontal } from "lucide-react"
+import { ChevronLeft, ChevronRight, Search, Users, User, SlidersHorizontal, MoreHorizontal, Plus } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import MemoSection from "@/components/session/MemoSection"
 import EditSessionDialog from "@/components/session/EditSessionDialog"
 import { useResponsive } from "@/hooks/useResponsive"
 import { useAuth } from "@/contexts/AuthContext"
+import Link from "next/link"
 
 function formatYmd(date: Date) {
     const y = date.getFullYear()
@@ -261,7 +262,7 @@ export default function SchedulePage() {
         }
     }
 
-    const handleSaveMemo = async (_session: Session) => {}
+    const handleSaveMemo = async (_session: Session) => { }
 
     return (
         <ProtectedRoute>
@@ -269,14 +270,27 @@ export default function SchedulePage() {
                 <AppHeader />
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                     <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
-                        <div className="flex items-center justify-between mb-4">
-                            <TabsList>
+                        <div className="flex flex-col sm:flex-row items-center sm:justify-between mb-4 gap-2">
+                            <TabsList className="w-full sm:w-auto">
                                 <TabsTrigger value="calendar">カレンダー</TabsTrigger>
                                 <TabsTrigger value="sessions">セッション</TabsTrigger>
                             </TabsList>
-                            {selectedDateKey && (
-                                <div className="text-xs text-gray-600">選択日: {selectedDateKey}</div>
-                            )}
+                            <div className="w-full sm:w-auto">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
+                                    <Link href={{ pathname: "/log-session", query: { redirect: "/schedule" } }} className="w-full">
+                                        <Button className="w-full h-10 sm:h-11">
+                                        <Plus className="mr-2 h-5 w-5" />
+                                        セッションを記録
+                                    </Button>
+                                    </Link>
+                                    <Link href={{ pathname: "/log-session", query: { mode: "planned", redirect: "/schedule" } }} className="w-full">
+                                        <Button variant="outline" className="w-full h-10 sm:h-11">
+                                        <Plus className="mr-2 h-5 w-5" />
+                                        予定セッションを登録
+                                    </Button>
+                                    </Link>
+                                </div>
+                            </div>
                         </div>
 
                         <TabsContent value="calendar">
@@ -631,80 +645,80 @@ export default function SchedulePage() {
                                                     <div
                                                         className={`p-3 border rounded-lg flex flex-col sm:flex-row sm:flex-wrap sm:items-center sm:justify-between ${s.status === "planned" ? "bg-blue-50 border-blue-200" : "bg-white"}`}
                                                     >
-                                                    <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap">
-                                                        <span className="text-xs inline-flex items-center justify-center rounded bg-white border px-1.5 py-0.5 text-gray-700 flex-shrink-0">{idx + 1}</span>
-                                                        <div className="flex-shrink-0">
-                                                            {s.type === "individual" ? (
-                                                                <div className="p-2 bg-blue-100 rounded-full">
-                                                                    <User className="h-5 w-5 text-blue-600" />
-                                                                </div>
-                                                            ) : (
-                                                                <div className="p-2 bg-green-100 rounded-full">
-                                                                    <Users className="h-5 w-5 text-green-600" />
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                        <div className="min-w-0">
-                                                            <div className="flex items-center gap-2">
-                                                                <span className="font-medium truncate max-w-[60vw] sm:max-w-none">{s.clientName}</span>
-                                                                <Badge
-                                                                    variant={s.status === "completed" ? "default" : "outline"}
-                                                                    className={s.status === "planned" ? "text-blue-600 border-blue-600" : ""}
-                                                                >
-                                                                    {s.status === "completed" ? "完了" : "予定"}
-                                                                </Badge>
+                                                        <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap">
+                                                            <span className="text-xs inline-flex items-center justify-center rounded bg-white border px-1.5 py-0.5 text-gray-700 flex-shrink-0">{idx + 1}</span>
+                                                            <div className="flex-shrink-0">
+                                                                {s.type === "individual" ? (
+                                                                    <div className="p-2 bg-blue-100 rounded-full">
+                                                                        <User className="h-5 w-5 text-blue-600" />
+                                                                    </div>
+                                                                ) : (
+                                                                    <div className="p-2 bg-green-100 rounded-full">
+                                                                        <Users className="h-5 w-5 text-green-600" />
+                                                                    </div>
+                                                                )}
                                                             </div>
-                                                            <div className="text-xs text-gray-600 mt-1 flex items-center gap-2">
-                                                                <span>
-                                                                    {new Date(s.date).toLocaleString("ja-JP", {
-                                                                        year: "numeric",
-                                                                        month: "short",
-                                                                        day: "numeric",
-                                                                    })}
-                                                                </span>
-                                                                <span className="inline-block w-1 h-1 rounded-full bg-gray-300" />
-                                                                <span>{s.duration}分</span>
+                                                            <div className="min-w-0">
+                                                                <div className="flex items-center gap-2">
+                                                                    <span className="font-medium truncate max-w-[60vw] sm:max-w-none">{s.clientName}</span>
+                                                                    <Badge
+                                                                        variant={s.status === "completed" ? "default" : "outline"}
+                                                                        className={s.status === "planned" ? "text-blue-600 border-blue-600" : ""}
+                                                                    >
+                                                                        {s.status === "completed" ? "完了" : "予定"}
+                                                                    </Badge>
+                                                                </div>
+                                                                <div className="text-xs text-gray-600 mt-1 flex items-center gap-2">
+                                                                    <span>
+                                                                        {new Date(s.date).toLocaleString("ja-JP", {
+                                                                            year: "numeric",
+                                                                            month: "short",
+                                                                            day: "numeric",
+                                                                        })}
+                                                                    </span>
+                                                                    <span className="inline-block w-1 h-1 rounded-full bg-gray-300" />
+                                                                    <span>{s.duration}分</span>
+                                                                </div>
+                                                                {/* 備考は下段に表示 */}
                                                             </div>
-                                                            {/* 備考は下段に表示 */}
                                                         </div>
+                                                        <div className="mt-2 sm:mt-0 flex items-center gap-1 flex-wrap sm:flex-nowrap justify-end shrink-0">
+                                                            <label className="inline-flex items-center gap-2 text-xs sm:text-sm cursor-pointer mr-2">
+                                                                <input
+                                                                    type="checkbox"
+                                                                    className="accent-blue-600 w-6 h-6"
+                                                                    checked={!!s.indexed}
+                                                                    onChange={() => handleToggleIndexed(s)}
+                                                                />
+                                                                <span>インデックス済み</span>
+                                                            </label>
+                                                            <DropdownMenu>
+                                                                <DropdownMenuTrigger asChild>
+                                                                    <Button size="icon" variant="ghost" aria-label="その他の操作">
+                                                                        <MoreHorizontal className="h-4 w-4" />
+                                                                    </Button>
+                                                                </DropdownMenuTrigger>
+                                                                <DropdownMenuContent align="end">
+                                                                    <DropdownMenuItem onClick={() => { setTargetSessionForEdit(s); setEditDialogOpen(true) }}>セッションを編集</DropdownMenuItem>
+                                                                </DropdownMenuContent>
+                                                            </DropdownMenu>
+                                                        </div>
+                                                        {s.memo && editingMemoId !== s.id && (
+                                                            <div className="text-xs text-gray-500 mt-2 break-words whitespace-pre-wrap w-full sm:basis-full">備考: {s.memo}</div>
+                                                        )}
                                                     </div>
-                                                    <div className="mt-2 sm:mt-0 flex items-center gap-1 flex-wrap sm:flex-nowrap justify-end shrink-0">
-                                                        <label className="inline-flex items-center gap-2 text-xs sm:text-sm cursor-pointer mr-2">
-                                                            <input
-                                                                type="checkbox"
-                                                                className="accent-blue-600 w-6 h-6"
-                                                                checked={!!s.indexed}
-                                                                onChange={() => handleToggleIndexed(s)}
-                                                            />
-                                                            <span>インデックス済み</span>
-                                                        </label>
-                                                        <DropdownMenu>
-                                                            <DropdownMenuTrigger asChild>
-                                                                <Button size="icon" variant="ghost" aria-label="その他の操作">
-                                                                    <MoreHorizontal className="h-4 w-4" />
-                                                                </Button>
-                                                            </DropdownMenuTrigger>
-                                                            <DropdownMenuContent align="end">
-                                                                <DropdownMenuItem onClick={() => { setTargetSessionForEdit(s); setEditDialogOpen(true) }}>セッションを編集</DropdownMenuItem>
-                                                            </DropdownMenuContent>
-                                                        </DropdownMenu>
-                                                    </div>
-                                                    {s.memo && editingMemoId !== s.id && (
-                                                        <div className="text-xs text-gray-500 mt-2 break-words whitespace-pre-wrap w-full sm:basis-full">備考: {s.memo}</div>
+                                                    {editingMemoId === s.id && (
+                                                        <MemoSection
+                                                            sessionId={s.id!}
+                                                            userId={user?.uid}
+                                                            memo={s.memo}
+                                                            className="mt-2"
+                                                            forceEdit
+                                                            hideMenu
+                                                            hidePreview
+                                                            onClose={() => setEditingMemoId(null)}
+                                                        />
                                                     )}
-                                                    </div>
-                                                {editingMemoId === s.id && (
-                                                    <MemoSection
-                                                        sessionId={s.id!}
-                                                        userId={user?.uid}
-                                                        memo={s.memo}
-                                                        className="mt-2"
-                                                        forceEdit
-                                                        hideMenu
-                                                        hidePreview
-                                                        onClose={() => setEditingMemoId(null)}
-                                                    />
-                                                )}
                                                 </div>
                                             ))
                                         )}

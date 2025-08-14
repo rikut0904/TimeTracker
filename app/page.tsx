@@ -112,13 +112,13 @@ export default function Dashboard() {
                                 <CardDescription>よく使う操作をすぐに実行できます</CardDescription>
                             </CardHeader>
                             <CardContent className="flex flex-col flex-grow gap-4">
-                                <Link href="/log-session" className="flex-grow">
+                                <Link href={{ pathname: "/log-session", query: { redirect: "/" } }} className="flex-grow">
                                     <Button className="w-full h-full md:text-lg" size="lg">
                                         <Plus className="mr-2 h-5 w-5" />
                                         セッションを記録
                                     </Button>
                                 </Link>
-                                <Link href="/log-session?mode=planned" className="flex-grow">
+                                <Link href={{ pathname: "/log-session", query: { mode: "planned", redirect: "/" } }} className="flex-grow">
                                     <Button variant="outline" className="w-full h-full md:text-lg" size="lg">
                                         <Plus className="mr-2 h-5 w-5" />
                                         予定セッションを登録
