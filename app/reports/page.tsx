@@ -56,6 +56,16 @@ export default function Reports() {
     }
   }
 
+  const handleMarkCompleted = async (sessionId: string) => {
+    if (!user?.uid) return
+    try {
+      await updateSession(user.uid, sessionId, { status: 'completed' })
+    } catch (e) {
+      console.error('failed to mark completed', e)
+      alert('完了への変更に失敗しました')
+    }
+  }
+
   const handleSaveMemo = async (_sessionId: string, _currentText: string) => { }
 
   const clientSessions = selectedInfo
@@ -344,6 +354,9 @@ export default function Reports() {
                         <span className="text-xs text-gray-600">{session.duration}分</span>
                       </div>
                       <div className="flex items-center gap-2 w-full sm:w-auto justify-start sm:justify-end mt-2 sm:mt-0">
+                        {session.status === 'planned' && (
+                          <Button size="sm" variant="secondary" onClick={() => handleMarkCompleted(session.id!)}>完了にする</Button>
+                        )}
                         <label className="inline-flex items-center gap-2 cursor-pointer mr-2 whitespace-nowrap">
                           <input
                             type="checkbox"

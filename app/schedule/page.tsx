@@ -262,6 +262,16 @@ export default function SchedulePage() {
         }
     }
 
+    const handleMarkCompleted = async (session: Session) => {
+        if (!user || !session.id) return
+        try {
+            await updateSession(user.uid, session.id, { status: "completed" })
+        } catch (e) {
+            console.error("Failed to mark completed", e)
+            alert("完了への変更に失敗しました")
+        }
+    }
+
     const handleSaveMemo = async (_session: Session) => { }
 
     return (
@@ -462,6 +472,9 @@ export default function SchedulePage() {
                                                             <span className="text-xs text-gray-600 ml-1">{s.duration}分</span>
                                                         </div>
                                                         <div className="text-sm text-gray-600 flex flex-wrap items-center gap-3 mt-1 sm:mt-0">
+                                                            {s.status === "planned" && (
+                                                                <Button size="sm" variant="secondary" onClick={() => handleMarkCompleted(s)}>完了にする</Button>
+                                                            )}
                                                             <label className="inline-flex items-center gap-2 text-xs sm:text-sm cursor-pointer">
                                                                 <input
                                                                     type="checkbox"
@@ -682,16 +695,19 @@ export default function SchedulePage() {
                                                                 {/* 備考は下段に表示 */}
                                                             </div>
                                                         </div>
-                                                        <div className="mt-2 sm:mt-0 flex items-center gap-1 flex-wrap sm:flex-nowrap justify-end shrink-0">
-                                                            <label className="inline-flex items-center gap-2 text-xs sm:text-sm cursor-pointer mr-2">
-                                                                <input
-                                                                    type="checkbox"
-                                                                    className="accent-blue-600 w-6 h-6"
-                                                                    checked={!!s.indexed}
-                                                                    onChange={() => handleToggleIndexed(s)}
-                                                                />
-                                                                <span>インデックス済み</span>
-                                                            </label>
+                                                    <div className="mt-2 sm:mt-0 flex items-center gap-1 flex-wrap sm:flex-nowrap justify-end shrink-0">
+                                                        {s.status === "planned" && (
+                                                            <Button size="sm" variant="secondary" onClick={() => handleMarkCompleted(s)}>完了にする</Button>
+                                                        )}
+                                                        <label className="inline-flex items-center gap-2 text-xs sm:text-sm cursor-pointer mr-2">
+                                                            <input
+                                                                type="checkbox"
+                                                                className="accent-blue-600 w-6 h-6"
+                                                                checked={!!s.indexed}
+                                                                onChange={() => handleToggleIndexed(s)}
+                                                            />
+                                                            <span>インデックス済み</span>
+                                                        </label>
                                                             <DropdownMenu>
                                                                 <DropdownMenuTrigger asChild>
                                                                     <Button size="icon" variant="ghost" aria-label="その他の操作">
