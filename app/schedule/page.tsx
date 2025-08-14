@@ -17,6 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ChevronLeft, ChevronRight, Search, Users, User, SlidersHorizontal, MoreHorizontal } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import MemoSection from "@/components/session/MemoSection"
+import EditSessionDialog from "@/components/session/EditSessionDialog"
 import { useResponsive } from "@/hooks/useResponsive"
 import { useAuth } from "@/contexts/AuthContext"
 
@@ -64,6 +65,8 @@ export default function SchedulePage() {
     const [showCalendarFilters, setShowCalendarFilters] = useState<boolean>(false)
     const [showSessionsFilters, setShowSessionsFilters] = useState<boolean>(false)
     const [editingMemoId, setEditingMemoId] = useState<string | null>(null)
+    const [editDialogOpen, setEditDialogOpen] = useState<boolean>(false)
+    const [targetSessionForEdit, setTargetSessionForEdit] = useState<Session | null>(null)
 
     const uniqueGroups = useMemo(() => {
         return Array.from(new Set((clients || []).map((c) => c.group).filter(Boolean))) as string[]
@@ -428,8 +431,8 @@ export default function SchedulePage() {
                                             selectedSessions
                                                 .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
                                                 .map((s) => (
-                                                    <div key={s.id} className="p-3 border rounded-md">
-                                                        <div className="flex items-center gap-2 mb-1">
+                                                    <div key={s.id} className="p-3 border rounded-md flex flex-col sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+                                                        <div className="flex items-center gap-2 mb-1 sm:mb-0">
                                                             {s.type === "individual" ? (
                                                                 <User className="h-4 w-4 text-blue-600" />
                                                             ) : (
@@ -442,8 +445,9 @@ export default function SchedulePage() {
                                                             >
                                                                 {s.status === "completed" ? "完了" : "予定"}
                                                             </Badge>
+                                                            <span className="text-xs text-gray-600 ml-1">{s.duration}分</span>
                                                         </div>
-                                                        <div className="text-sm text-gray-600 flex flex-wrap items-center gap-3">
+                                                        <div className="text-sm text-gray-600 flex flex-wrap items-center gap-3 mt-1 sm:mt-0">
                                                             <label className="inline-flex items-center gap-2 text-xs sm:text-sm cursor-pointer">
                                                                 <input
                                                                     type="checkbox"
@@ -453,18 +457,21 @@ export default function SchedulePage() {
                                                                 />
                                                                 <span>インデックス済み</span>
                                                             </label>
-                                                            {/* 備考編集ボタンを削除（MemoSectionで直接編集） */}
+                                                            <DropdownMenu>
+                                                                <DropdownMenuTrigger asChild>
+                                                                    <Button size="icon" variant="ghost" aria-label="その他の操作">
+                                                                        <MoreHorizontal className="h-4 w-4" />
+                                                                    </Button>
+                                                                </DropdownMenuTrigger>
+                                                                <DropdownMenuContent align="end">
+                                                                    <DropdownMenuItem onClick={() => { setTargetSessionForEdit(s); setEditDialogOpen(true) }}>セッションを編集</DropdownMenuItem>
+                                                                </DropdownMenuContent>
+                                                            </DropdownMenu>
                                                         </div>
-                                                        <MemoSection
-                                                            sessionId={s.id!}
-                                                            userId={user?.uid}
-                                                            memo={s.memo}
-                                                            className="mt-2 w-full"
-                                                            forceEdit={editingMemoId === s.id}
-                                                            hideMenu={editingMemoId === s.id}
-                                                            hidePreview={false}
-                                                            onClose={() => setEditingMemoId(null)}
-                                                        />
+                                                        {s.memo && (
+                                                            <div className="text-xs text-gray-500 mt-1 break-words sm:w-full">備考: {s.memo}</div>
+                                                        )}
+                                                        {/* カレンダー詳細ではインライン編集を廃止 */}
                                                     </div>
                                                 ))
                                         )}
@@ -622,10 +629,9 @@ export default function SchedulePage() {
                                             sessionsFiltered.map((s) => (
                                                 <div key={s.id} className="space-y-2">
                                                     <div
-                                                        className={`flex items-center justify-between p-3 border rounded-lg ${s.status === "planned" ? "bg-blue-50 border-blue-200" : "bg-white"
-                                                            }`}
+                                                        className={`p-3 border rounded-lg flex flex-col sm:flex-row sm:flex-wrap sm:items-center sm:justify-between ${s.status === "planned" ? "bg-blue-50 border-blue-200" : "bg-white"}`}
                                                     >
-                                                    <div className="flex items-center gap-3">
+                                                    <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap">
                                                         <div className="flex-shrink-0">
                                                             {s.type === "individual" ? (
                                                                 <div className="p-2 bg-blue-100 rounded-full">
@@ -637,9 +643,9 @@ export default function SchedulePage() {
                                                                 </div>
                                                             )}
                                                         </div>
-                                                        <div>
+                                                        <div className="min-w-0">
                                                             <div className="flex items-center gap-2">
-                                                                <span className="font-medium">{s.clientName}</span>
+                                                                <span className="font-medium truncate max-w-[60vw] sm:max-w-none">{s.clientName}</span>
                                                                 <Badge
                                                                     variant={s.status === "completed" ? "default" : "outline"}
                                                                     className={s.status === "planned" ? "text-blue-600 border-blue-600" : ""}
@@ -647,21 +653,21 @@ export default function SchedulePage() {
                                                                     {s.status === "completed" ? "完了" : "予定"}
                                                                 </Badge>
                                                             </div>
-                                                            <div className="text-xs text-gray-600 mt-1">
-                                                                {new Date(s.date).toLocaleString("ja-JP", {
-                                                                    year: "numeric",
-                                                                    month: "short",
-                                                                    day: "numeric",
-                                                                })}
+                                                            <div className="text-xs text-gray-600 mt-1 flex items-center gap-2">
+                                                                <span>
+                                                                    {new Date(s.date).toLocaleString("ja-JP", {
+                                                                        year: "numeric",
+                                                                        month: "short",
+                                                                        day: "numeric",
+                                                                    })}
+                                                                </span>
+                                                                <span className="inline-block w-1 h-1 rounded-full bg-gray-300" />
+                                                                <span>{s.duration}分</span>
                                                             </div>
-                                                            {s.memo && editingMemoId !== s.id && (
-                                                                <div className="text-xs text-gray-500 mt-1 break-words">
-                                                                    備考: {s.memo}
-                                                                </div>
-                                                            )}
+                                                            {/* 備考は下段に表示 */}
                                                         </div>
                                                     </div>
-                                                    <div className="flex items-center gap-1">
+                                                    <div className="mt-2 sm:mt-0 flex items-center gap-1 flex-wrap sm:flex-nowrap justify-end shrink-0">
                                                         <label className="inline-flex items-center gap-2 text-xs sm:text-sm cursor-pointer mr-2">
                                                             <input
                                                                 type="checkbox"
@@ -678,12 +684,13 @@ export default function SchedulePage() {
                                                                 </Button>
                                                             </DropdownMenuTrigger>
                                                             <DropdownMenuContent align="end">
-                                                                <DropdownMenuItem onClick={() => setEditingMemoId(editingMemoId === s.id ? null : (s.id || null))}>
-                                                                    {editingMemoId === s.id ? "備考編集を閉じる" : "備考を編集"}
-                                                                </DropdownMenuItem>
+                                                                <DropdownMenuItem onClick={() => { setTargetSessionForEdit(s); setEditDialogOpen(true) }}>セッションを編集</DropdownMenuItem>
                                                             </DropdownMenuContent>
                                                         </DropdownMenu>
                                                     </div>
+                                                    {s.memo && editingMemoId !== s.id && (
+                                                        <div className="text-xs text-gray-500 mt-2 break-words whitespace-pre-wrap w-full sm:basis-full">備考: {s.memo}</div>
+                                                    )}
                                                     </div>
                                                 {editingMemoId === s.id && (
                                                     <MemoSection
@@ -704,6 +711,7 @@ export default function SchedulePage() {
                                 </CardContent>
                             </Card>
                         </TabsContent>
+                        <EditSessionDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} session={targetSessionForEdit} userId={user?.uid} clients={clients} />
                     </Tabs>
                 </div>
             </div>

@@ -50,13 +50,14 @@ export default function LogSession() {
             return
         }
 
-        if (!selectedClient || (!duration && !customDuration)) {
+        if (!selectedClient || (duration === null && customDuration.trim() === "")) {
             alert("セッションタイプ、クライエント、時間を選択してください")
             return
         }
 
-        const finalDuration = duration || Number.parseInt(customDuration)
-        if (!finalDuration || finalDuration <= 0) {
+        const parsedCustom = customDuration.trim() === "" ? null : Number.parseInt(customDuration)
+        const finalDuration = duration !== null ? duration : (parsedCustom as number | null)
+        if (finalDuration === null || Number.isNaN(finalDuration) || finalDuration < 0) {
             alert("有効な時間を入力してください")
             return
         }

@@ -9,9 +9,11 @@ import { useAuth } from "@/contexts/AuthContext"
 import AppHeader from "@/components/AppHeader"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import MemoSection from "@/components/session/MemoSection"
+// import MemoSection from "@/components/session/MemoSection"
 import { updateSession } from "@/lib/firestore"
+import EditSessionDialog from "@/components/session/EditSessionDialog"
 import { useUserSessions } from "@/hooks/useUserSessions"
+import { useUserClients } from "@/hooks/useUserClients"
 import {
   Dialog,
   DialogContent,
@@ -32,9 +34,12 @@ interface Client {
 export default function Reports() {
   const { userProfile, user } = useAuth() as any
   const sessions = useUserSessions()
+  const clients = useUserClients()
   const [selectedInfo, setSelectedInfo] = useState<{ clientId: string; clientName: string; type: 'individual' | 'group' } | null>(null)
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
   const [editingMemoId, setEditingMemoId] = useState<string | null>(null)
+  const [editDialogOpen, setEditDialogOpen] = useState(false)
+  const [targetSessionForEdit, setTargetSessionForEdit] = useState<any>(null)
 
   const handleViewDetails = (clientId: string, clientName: string, type: 'individual' | 'group') => {
     setSelectedInfo({ clientId, clientName, type })
@@ -58,7 +63,8 @@ export default function Reports() {
       (s) =>
         s.clientId === selectedInfo.clientId &&
         s.type === selectedInfo.type &&
-        s.status === "completed",
+        s.status === "completed" &&
+        s.duration > 0,
     )
     : []
 
@@ -94,13 +100,17 @@ export default function Reports() {
             clientName: session.clientName,
             totalHours: 0,
             sessionCount: 0,
+            doneCount: 0,
+            notDoneCount: 0,
           }
         }
         acc[session.clientId].totalHours += session.duration / 60
         acc[session.clientId].sessionCount += 1
+        if (session.duration > 0) acc[session.clientId].doneCount += 1
+        else acc[session.clientId].notDoneCount += 1
         return acc
       },
-      {} as Record<string, { clientName: string; totalHours: number; sessionCount: number }>,
+      {} as Record<string, { clientName: string; totalHours: number; sessionCount: number; doneCount: number; notDoneCount: number }>,
     )
 
   // グループセッション統計
@@ -113,13 +123,17 @@ export default function Reports() {
             clientName: session.clientName,
             totalHours: 0,
             sessionCount: 0,
+            doneCount: 0,
+            notDoneCount: 0,
           }
         }
         acc[session.clientId].totalHours += session.duration / 60
         acc[session.clientId].sessionCount += 1
+        if (session.duration > 0) acc[session.clientId].doneCount += 1
+        else acc[session.clientId].notDoneCount += 1
         return acc
       },
-      {} as Record<string, { clientName: string; totalHours: number; sessionCount: number }>,
+      {} as Record<string, { clientName: string; totalHours: number; sessionCount: number; doneCount: number; notDoneCount: number }>,
     )
 
   return (
@@ -201,7 +215,7 @@ export default function Reports() {
                           <User className="h-5 w-5 text-blue-600" />
                           <div>
                             <div className="font-medium">{data.clientName}</div>
-                            <div className="text-sm text-muted-foreground">{data.sessionCount}回のセッション</div>
+                            <div className="text-sm text-muted-foreground">実施/休み: {data.doneCount}/{data.notDoneCount}</div>
                           </div>
                         </div>
                         <div className="text-right">
@@ -244,7 +258,7 @@ export default function Reports() {
                           <Users className="h-5 w-5 text-green-600" />
                           <div>
                             <div className="font-medium">{data.clientName}</div>
-                            <div className="text-sm text-muted-foreground">{data.sessionCount}回のセッション</div>
+                            <div className="text-sm text-muted-foreground">実施/休み: {data.doneCount}/{data.notDoneCount}</div>
                           </div>
                         </div>
                         <div className="text-right">
@@ -275,7 +289,11 @@ export default function Reports() {
                 {clientSessions.map((session) => (
                   <li key={session.id} className="p-2 bg-gray-100 rounded">
                     <div className="flex items-center justify-between gap-3">
-                      <span className="text-sm">{session.date.toLocaleDateString("ja-JP")}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm">{session.date.toLocaleDateString("ja-JP")}</span>
+                        <span className="inline-block w-1 h-1 rounded-full bg-gray-300" />
+                        <span className="text-xs text-gray-600">{session.duration}分</span>
+                      </div>
                       <div className="flex items-center gap-1">
                         <label className="inline-flex items-center gap-2 text-xs sm:text-sm cursor-pointer mr-2">
                           <input
@@ -293,33 +311,13 @@ export default function Reports() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem
-                              onClick={() => {
-                                setEditingMemoId(editingMemoId === session.id ? null : (session.id || null))
-                              }}
-                            >
-                              {editingMemoId === session.id ? "備考編集を閉じる" : "備考を編集"}
-                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => { setTargetSessionForEdit(session as any); setEditDialogOpen(true) }}>セッションを編集</DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </div>
                     </div>
-                    {(session.memo ?? "").trim() !== "" && editingMemoId !== session.id && (
-                      <div className="text-xs text-gray-500 mt-1 break-words">
-                        備考: {session.memo}
-                      </div>
-                    )}
-                    {editingMemoId === session.id && (
-                      <MemoSection
-                        sessionId={session.id!}
-                        userId={user?.uid}
-                        memo={session.memo}
-                        className="mt-2"
-                        forceEdit
-                        hideMenu
-                        hidePreview
-                        onClose={() => setEditingMemoId(null)}
-                      />
+                    {(session.memo ?? "").trim() !== "" && (
+                      <div className="text-xs text-gray-500 mt-1 break-words">備考: {session.memo}</div>
                     )}
                   </li>
                 ))}
@@ -335,6 +333,7 @@ export default function Reports() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <EditSessionDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} session={targetSessionForEdit} userId={user?.uid} clients={clients || []} />
     </ProtectedRoute>
   )
 }
