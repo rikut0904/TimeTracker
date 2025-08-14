@@ -56,7 +56,7 @@ export default function Reports() {
     }
   }
 
-  const handleSaveMemo = async (_sessionId: string, _currentText: string) => {}
+  const handleSaveMemo = async (_sessionId: string, _currentText: string) => { }
 
   const clientSessions = selectedInfo
     ? sessions.filter(
@@ -67,6 +67,28 @@ export default function Reports() {
         s.duration > 0,
     )
     : []
+
+  // 詳細モーダル用のサマリー（A/B と インデックス済み数）
+  const clientSessionsNonZeroForSummary = selectedInfo
+    ? sessions.filter(
+      (s) =>
+        s.clientId === selectedInfo.clientId &&
+        s.type === selectedInfo.type &&
+        s.status === "completed" &&
+        (s.duration ?? 0) > 0,
+    )
+    : []
+  const detailDoneCount = clientSessionsNonZeroForSummary.length
+  const detailRestCount = selectedInfo
+    ? sessions.filter(
+      (s) =>
+        s.clientId === selectedInfo.clientId &&
+        s.type === selectedInfo.type &&
+        s.status === "completed" &&
+        (s.duration ?? 0) === 0,
+    ).length
+    : 0
+  const detailIndexedCount = clientSessionsNonZeroForSummary.filter((s) => !!s.indexed).length
 
   // 完了したセッションのみで時間を計算
   const individualHours =
@@ -79,6 +101,10 @@ export default function Reports() {
     60
 
   const totalHours = individualHours + groupHours
+  // 全体のインデックス済み件数（完了かつ0分除外）
+  const allCompletedNonZero = sessions.filter((s) => s.status === "completed" && (s.duration ?? 0) > 0)
+  const indexedCompletedCount = allCompletedNonZero.filter((s) => !!s.indexed).length
+
 
   // 予定セッションの時間も計算
   const plannedIndividualHours =
@@ -102,15 +128,20 @@ export default function Reports() {
             sessionCount: 0,
             doneCount: 0,
             notDoneCount: 0,
+            indexedNonZeroCount: 0,
           }
         }
         acc[session.clientId].totalHours += session.duration / 60
         acc[session.clientId].sessionCount += 1
-        if (session.duration > 0) acc[session.clientId].doneCount += 1
-        else acc[session.clientId].notDoneCount += 1
+        if (session.duration > 0) {
+          acc[session.clientId].doneCount += 1
+          if (session.indexed) acc[session.clientId].indexedNonZeroCount += 1
+        } else {
+          acc[session.clientId].notDoneCount += 1
+        }
         return acc
       },
-      {} as Record<string, { clientName: string; totalHours: number; sessionCount: number; doneCount: number; notDoneCount: number }>,
+      {} as Record<string, { clientName: string; totalHours: number; sessionCount: number; doneCount: number; notDoneCount: number; indexedNonZeroCount: number }>,
     )
 
   // グループセッション統計
@@ -125,15 +156,20 @@ export default function Reports() {
             sessionCount: 0,
             doneCount: 0,
             notDoneCount: 0,
+            indexedNonZeroCount: 0,
           }
         }
         acc[session.clientId].totalHours += session.duration / 60
         acc[session.clientId].sessionCount += 1
-        if (session.duration > 0) acc[session.clientId].doneCount += 1
-        else acc[session.clientId].notDoneCount += 1
+        if (session.duration > 0) {
+          acc[session.clientId].doneCount += 1
+          if (session.indexed) acc[session.clientId].indexedNonZeroCount += 1
+        } else {
+          acc[session.clientId].notDoneCount += 1
+        }
         return acc
       },
-      {} as Record<string, { clientName: string; totalHours: number; sessionCount: number; doneCount: number; notDoneCount: number }>,
+      {} as Record<string, { clientName: string; totalHours: number; sessionCount: number; doneCount: number; notDoneCount: number; indexedNonZeroCount: number }>,
     )
 
   return (
@@ -142,9 +178,14 @@ export default function Reports() {
         <AppHeader />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="mb-8">
+          <div className="mb-2">
             <h2 className="text-2xl font-bold text-gray-900 mb-2">時間数サマリー</h2>
             <p className="text-gray-600">実習時間の詳細レポートです</p>
+          </div>
+          <div className="mb-6 text-xs text-gray-600 flex items-center gap-3">
+            <span>実施/休み: {allCompletedNonZero.length}/{sessions.filter((s) => s.status === "completed" && (s.duration ?? 0) === 0).length}</span>
+            <span className="inline-block w-1 h-1 rounded-full bg-gray-300" />
+            <span>インデックス済み: {indexedCompletedCount}/{allCompletedNonZero.length}</span>
           </div>
 
           {/* Overall Progress */}
@@ -213,9 +254,10 @@ export default function Reports() {
                       <div key={clientId} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                         <div className="flex items-center space-x-3">
                           <User className="h-5 w-5 text-blue-600" />
-                          <div>
-                            <div className="font-medium">{data.clientName}</div>
-                            <div className="text-sm text-muted-foreground">実施/休み: {data.doneCount}/{data.notDoneCount}</div>
+                          <div className="font-medium">{data.clientName}</div>
+                          <div className="mb-2 text-[9px] sm:text-sm text-gray-600 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                            <span>実施/休み: {data.doneCount}/{data.notDoneCount}</span>
+                            <span>インデックス済み: {data.indexedNonZeroCount}/{data.doneCount}</span>
                           </div>
                         </div>
                         <div className="text-right">
@@ -256,9 +298,10 @@ export default function Reports() {
                       <div key={clientId} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                         <div className="flex items-center space-x-3">
                           <Users className="h-5 w-5 text-green-600" />
-                          <div>
-                            <div className="font-medium">{data.clientName}</div>
-                            <div className="text-sm text-muted-foreground">実施/休み: {data.doneCount}/{data.notDoneCount}</div>
+                          <div className="font-medium">{data.clientName}</div>
+                          <div className="mb-2 text-[9px] sm:text-sm text-gray-600 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                            <span>実施/休み: {data.doneCount}/{data.notDoneCount}</span>
+                            <span>インデックス済み: {data.indexedNonZeroCount}/{data.doneCount}</span>
                           </div>
                         </div>
                         <div className="text-right">
@@ -276,7 +319,7 @@ export default function Reports() {
         </div>
       </div>
       <Dialog open={isDetailModalOpen} onOpenChange={setIsDetailModalOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="w-[95vw] sm:max-w-[560px]">
           <DialogHeader>
             <DialogTitle>{selectedInfo?.clientName}さんのセッション詳細</DialogTitle>
             <DialogDescription>
@@ -284,22 +327,27 @@ export default function Reports() {
             </DialogDescription>
           </DialogHeader>
           <div className="max-h-96 overflow-y-auto py-4">
+            <div className="mb-2 text-[11px] sm:text-xs text-gray-600 flex items-center gap-3">
+              <span>実施/休み: {detailDoneCount}/{detailRestCount}</span>
+              <span className="inline-block w-1 h-1 rounded-full bg-gray-300" />
+              <span>インデックス済み: {detailIndexedCount}/{clientSessionsNonZeroForSummary.length}</span>
+            </div>
             {clientSessions.length > 0 ? (
               <ul className="space-y-2">
                 {clientSessions.map((session, idx) => (
-                  <li key={session.id} className="p-2 bg-gray-100 rounded">
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs inline-flex items-center justify-center rounded bg-white border px-1.5 py-0.5 text-gray-700">{idx + 1}</span>
-                        <span className="text-sm">{session.date.toLocaleDateString("ja-JP")}</span>
+                  <li key={session.id} className="p-2 bg-white border rounded">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                      <div className="flex items-center gap-2 min-w-0 flex-1">
+                        <span className="inline-flex items-center justify-center rounded bg-white border px-1.5 py-0.5 text-gray-700 text-[11px] sm:text-xs">{idx + 1}</span>
+                        <span className="truncate">{session.date.toLocaleDateString("ja-JP")}</span>
                         <span className="inline-block w-1 h-1 rounded-full bg-gray-300" />
                         <span className="text-xs text-gray-600">{session.duration}分</span>
                       </div>
-                      <div className="flex items-center gap-1">
-                        <label className="inline-flex items-center gap-2 text-xs sm:text-sm cursor-pointer mr-2">
+                      <div className="flex items-center gap-2 w-full sm:w-auto justify-start sm:justify-end mt-2 sm:mt-0">
+                        <label className="inline-flex items-center gap-2 cursor-pointer mr-2 whitespace-nowrap">
                           <input
                             type="checkbox"
-                            className="accent-blue-600 w-6 h-6"
+                            className="accent-blue-600 w-5 h-5 sm:w-6 sm:h-6"
                             checked={!!session.indexed}
                             onChange={() => handleToggleIndexed(session.id!, session.indexed)}
                           />
@@ -318,7 +366,7 @@ export default function Reports() {
                       </div>
                     </div>
                     {(session.memo ?? "").trim() !== "" && (
-                      <div className="text-xs text-gray-500 mt-1 break-words">備考: {session.memo}</div>
+                      <div className="text-xs text-gray-500 mt-2 break-words whitespace-pre-wrap w-full">備考: {session.memo}</div>
                     )}
                   </li>
                 ))}
