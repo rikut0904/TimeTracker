@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -25,7 +26,7 @@ interface AddClientDialogProps {
         group: string
     }
     setNewClient: (client: { name: string; group: string }) => void
-    onAdd: () => void
+    onAdd: (overrideClient?: { name: string; group: string }) => void
     clients: Client[]
 }
 
@@ -37,7 +38,24 @@ export const AddClientDialog = ({
     onAdd,
     clients,
 }: AddClientDialogProps) => {
+    const [newGroupName, setNewGroupName] = useState("")
     const existingGroups = Array.from(new Set(clients.map(client => client.group).filter(Boolean)))
+    
+    const handleAdd = () => {
+        if (newClient.group === GROUP_VALUES.NEW && newGroupName.trim()) {
+            // 新しいグループ名で直接onAddを呼び出す
+            const clientWithNewGroup = { ...newClient, group: newGroupName.trim() }
+            onAdd(clientWithNewGroup)
+        } else {
+            onAdd()
+        }
+        setNewGroupName("")
+    }
+    
+    const handleCancel = () => {
+        setNewGroupName("")
+        onOpenChange(false)
+    }
 
     return (
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -87,17 +105,17 @@ export const AddClientDialog = ({
                         {newClient.group === GROUP_VALUES.NEW && (
                             <Input
                                 placeholder="新しいグループ名を入力"
-                                value={newClient.group === GROUP_VALUES.NEW ? "" : newClient.group}
-                                onChange={(e) => setNewClient({ ...newClient, group: e.target.value })}
+                                value={newGroupName}
+                                onChange={(e) => setNewGroupName(e.target.value)}
                             />
                         )}
                     </div>
                 </div>
                 <DialogFooter>
-                    <Button variant="outline" onClick={() => onOpenChange(false)}>
+                    <Button variant="outline" onClick={handleCancel}>
                         キャンセル
                     </Button>
-                    <Button onClick={onAdd}>
+                    <Button onClick={handleAdd}>
                         追加
                     </Button>
                 </DialogFooter>
