@@ -2,6 +2,7 @@ import { useState } from "react"
 import { addClient, updateClient, deleteClient as deleteClientFromDB, updateSession, getUserSessions, deleteSession, deleteField } from "@/lib/firestore"
 import type { Client } from "@/lib/firestore"
 import { useAuth } from "@/contexts/AuthContext"
+import { GROUP_VALUES } from "@/lib/constants"
 
 interface ClientFormData {
     name: string
@@ -24,15 +25,24 @@ export const useClientManagement = () => {
         group: "",
     })
 
-    const handleAddClient = async () => {
-        if (!newClient.name.trim() || !user) {
+    const handleAddClient = async (overrideClient?: { name: string; group: string }) => {
+        const clientToAdd = overrideClient || newClient
+        
+        if (!clientToAdd.name.trim() || !user) {
             alert("クライエント名を入力してください")
             return
         }
 
+        // GROUP_VALUES.NEWの場合は空文字として扱う（エラーケース）
+        let groupValue = clientToAdd.group.trim()
+        if (groupValue === GROUP_VALUES.NEW) {
+            alert("新しいグループ名を入力してください")
+            return
+        }
+
         const clientData: Omit<Client, "id"> = {
-            name: newClient.name.trim(),
-            group: newClient.group.trim(),
+            name: clientToAdd.name.trim(),
+            group: groupValue,
         }
 
         try {
